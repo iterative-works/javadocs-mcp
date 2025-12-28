@@ -558,94 +558,58 @@ Two-level caching strategy:
 
 ---
 
-### CLARIFY: Coursier JAR Caching Strategy
+### ✅ RESOLVED: Coursier JAR Caching Strategy
 
-Coursier likely caches downloaded JARs to `~/.cache/coursier`. Do we rely on this or add our own layer?
+**Decision:** Two-level caching (Option B)
 
-**Questions to answer:**
+1. **Coursier's file-system cache** (`~/.cache/coursier`): Handles JAR downloads
+2. **In-memory result cache** (Story 7): Caches extracted content (HTML/source text)
 
-1. Does Coursier's file-system cache give us enough performance?
-2. Do we need in-memory JAR content caching beyond Coursier's cache?
-3. Should we cache extracted content (HTML/source) separately from JARs?
-
-**Options:**
-
-- **Option A: Rely solely on Coursier's cache** - Simplest
-  - Pros: No additional code, Coursier handles locking/concurrency
-  - Cons: Still involves JAR extraction on each request for same class
-
-- **Option B: Add in-memory result cache (Story 7)** - Balanced
-  - Pros: Much faster repeated lookups, reasonable memory usage
-  - Cons: Need cache management, memory limits, eviction
-
-- **Option C: Persistent result cache (SQLite/file)** - Most performant
-  - Pros: Survives server restarts, can be very large
-  - Cons: Out of MVP scope, adds complexity
-
-**Impact:** Affects Story 7 scope and overall performance characteristics.
-
-**Recommendation:** **Option B** for MVP (Story 7), potentially Option C in future.
+**Rationale:**
+- Coursier cache avoids re-downloading JARs
+- In-memory cache avoids re-extracting same class from JAR
+- LRU eviction with configurable size limit
+- Persistent cache (SQLite) deferred to post-MVP
 
 ---
 
-### CLARIFY: Class Name to File Path Mapping
+### ✅ RESOLVED: Class Name to File Path Mapping
 
-How exactly do we map `cats.effect.IO` to file paths in javadoc/source JARs?
+**Decision:** Simple algorithm with inner class handling
 
-**Questions to answer:**
+**Algorithm:**
+```scala
+def classNameToPath(className: String, extension: String): String = {
+  val outerClass = className.split('$').head  // Strip inner class suffix
+  outerClass.replace('.', '/') + extension
+}
+```
 
-1. For Javadoc: Is it always `cats/effect/IO.html` or can structure vary?
-2. For sources: Is it always `cats/effect/IO.scala` or can there be variations?
-3. How do we handle inner classes? (`IO$Pure` or `IO.Pure`?)
-4. What about package-info files and module-info?
+**Examples:**
+- `org.slf4j.Logger` → `org/slf4j/Logger.html`
+- `cats.effect.IO$Pure` → `cats/effect/IO.html` (inner classes in outer file)
+- `cats.effect.IO` → `cats/effect/IO.scala`
 
-**Options:**
+**Research confirmed:** Inner classes live in the outer class file (both javadoc and sources). Standard JVM convention.
 
-- **Option A: Simple replacement algorithm** - Replace `.` with `/`, add extension
-  - Pros: Fast, simple, works for 90% of cases
-  - Cons: Might miss edge cases, inner classes tricky
-
-- **Option B: JAR manifest/index inspection** - Read JAR metadata
-  - Pros: More accurate, handles edge cases
-  - Cons: More complex, not all JARs have indexes
-
-- **Option C: Fuzzy search within JAR** - Try multiple path patterns
-  - Pros: Most robust, handles all cases
-  - Cons: Slower, more complex
-
-**Impact:** Affects accuracy of class lookups in Stories 1-4 and error handling in Story 6.
-
-**Recommendation:** Start with **Option A**, fall back to Option C if we hit issues during testing.
+**Edge cases deferred:** Anonymous classes (`Foo$1`), package-info, module-info.
 
 ---
 
-### CLARIFY: Scaladoc vs Javadoc Detection
+### ✅ RESOLVED: Scaladoc vs Javadoc Detection
 
-How do we know whether to look for Scaladoc or Javadoc for a given artifact?
+**Decision:** Infer from coordinates (Option A)
 
-**Questions to answer:**
+**Rules:**
+- `::` in coordinates → Scala artifact → try `.scala` for sources
+- `:` in coordinates → Java artifact → try `.java` for sources
+- For docs: Both use `-javadoc.jar` classifier (Scaladoc is packaged same way)
 
-1. Can we determine language from coordinates alone (`::` = Scala)?
-2. Should we try both and return whichever exists?
-3. Do some Scala libraries publish both?
+**File extension strategy for sources:**
+1. If Scala coordinates (`::`) → try `.scala` first, fall back to `.java`
+2. If Java coordinates (`:`) → try `.java` first, fall back to `.scala`
 
-**Options:**
-
-- **Option A: Infer from coordinates** - `::` means Scala, `:` means Java
-  - Pros: Fast, no guessing
-  - Cons: Might be wrong for edge cases (Scala with explicit version)
-
-- **Option B: Try both formats** - Fetch javadoc JAR, check file extensions
-  - Pros: Most accurate
-  - Cons: Slower, more complex
-
-- **Option C: Add explicit `language` parameter** - User specifies
-  - Pros: No ambiguity
-  - Cons: More burden on caller
-
-**Impact:** Affects Stories 3-4 implementation and user experience.
-
-**Recommendation:** **Option A** for MVP (simple heuristic), document edge cases.
+**Rationale:** Simple, fast, works for vast majority of cases. Edge cases documented.
 
 ---
 
@@ -1031,7 +995,7 @@ LOG_LEVEL=INFO                    # Log level (default: INFO)
 - ✅ Coursier dependency added to `project.scala`
 - ✅ **Chimp MCP library** - `com.softwaremill.chimp::chimp-core:0.1.6`
 - ✅ **Tapir Netty server** - `com.softwaremill.sttp.tapir::tapir-netty-server-sync:1.11.11`
-- ⚠️ Test framework setup (MUnit recommended for Scala 3)
+- ✅ **MUnit test framework** - `org.scalameta::munit:1.0.0`
 
 **External accounts/access:**
 
@@ -1221,32 +1185,20 @@ LOG_LEVEL=INFO                    # Log level (default: INFO)
 
 ---
 
-**Analysis Status:** Ready for Implementation
+**Analysis Status:** ✅ Ready for Implementation
 
-**Key Decisions Made:**
+**All Decisions Made:**
 - ✅ **MCP Library:** Chimp (SoftwareMill) - Tapir-based, type-safe tools
 - ✅ **Tool Schema:** Auto-derived from case classes via `derives Codec, Schema`
 - ✅ **Error Handling:** Chimp's `Either[String, String]` with descriptive messages
+- ✅ **Testing Framework:** MUnit
+- ✅ **Story Order:** Java first (1→2→3→4→5→6→7)
+- ✅ **MVP Scope:** All 7 stories (18-27h)
+- ✅ **Path Mapping:** Simple algorithm with inner class stripping
+- ✅ **Caching:** Two-level (Coursier file cache + in-memory result cache)
+- ✅ **Language Detection:** Infer from coordinates (`::` = Scala, `:` = Java)
 
 **Next Steps:**
 
-1. Run `/iterative-works:ag-create-tasks JMC-1` to break down stories into implementation tasks
-
-2. Run `/iterative-works:ag-implement JMC-1` for iterative story-by-story development
-
----
-
-**Remaining Questions for Michal:**
-
-1. **Testing framework** - What should we use?
-   - MUnit (recommended for Scala 3, lighter)
-   - ScalaTest (most popular, more verbose)
-
-2. **Story prioritization** - Current order prioritizes Java first. Should Scala come first instead?
-   - Current: Story 1 (Java docs) → Story 2 (Java source) → Story 3 (Scala docs) → Story 4 (Scala source)
-   - Alternative: Story 1 → Story 3 → Story 2 → Story 4 (Scala docs before Java source)
-
-3. **Scope** - With reduced estimates (18-27h), do all 7 stories still make sense?
-   - All 7 stories: Full MVP with caching
-   - Stories 1-6: Skip caching for now (saves 4-6h)
-   - Stories 1-4: Core functionality only (saves 8-12h)
+1. `/iterative-works:ag-create-tasks JMC-1` - Generate phase-based task index
+2. `/iterative-works:ag-implement JMC-1` - Start story-by-story implementation
