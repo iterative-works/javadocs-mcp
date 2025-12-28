@@ -1,0 +1,280 @@
+# Phase 1 Implementation Tasks: Fetch Javadoc HTML for Java class
+
+**Issue:** JMC-1  
+**Phase:** 1 of 7  
+**Story:** Fetch Javadoc HTML for a Java library class  
+**Estimated Effort:** 4-6 hours  
+**Status:** Ready for implementation
+
+---
+
+## Task Overview
+
+This phase establishes the foundational vertical slice: MCP HTTP server → Coursier → JAR extraction → HTML response. Tasks follow strict TDD cycle: write failing test → implement minimal code → refactor.
+
+**Key principle:** Each task should be completable in 15-30 minutes. Commit frequently.
+
+---
+
+## Setup Tasks
+
+- [ ] [setup] Add Chimp MCP dependencies to `project.scala`
+- [ ] [setup] Add Tapir Netty server dependency to `project.scala`
+- [ ] [setup] Add MUnit test dependency to `project.scala`
+- [ ] [setup] Create directory structure (`src/main/scala`, `src/test/scala`)
+- [ ] [setup] Verify `scala-cli compile .` works with new dependencies
+- [ ] [setup] Commit: "chore: add Chimp MCP and testing dependencies"
+
+---
+
+## Domain Layer - Value Objects
+
+### ArtifactCoordinates
+
+- [ ] [test] Write failing test for parsing valid Maven coordinates `"org.slf4j:slf4j-api:2.0.9"`
+- [ ] [impl] Implement `ArtifactCoordinates.parse()` to pass test (return `Either[Error, ArtifactCoordinates]`)
+- [ ] [test] Write failing test for coordinates with missing version `"org.slf4j:slf4j-api"`
+- [ ] [impl] Implement validation to return `Left(error)` for invalid format
+- [ ] [test] Write failing test for completely invalid format `"invalid"`
+- [ ] [impl] Handle edge case, ensure all tests pass
+- [ ] [impl] Add `PURPOSE:` comment to `ArtifactCoordinates.scala`
+- [ ] [setup] Commit: "feat(domain): add ArtifactCoordinates value object with validation"
+
+### ClassName
+
+- [ ] [test] Write failing test for `ClassName("org.slf4j.Logger").toHtmlPath == "org/slf4j/Logger.html"`
+- [ ] [impl] Implement `ClassName` case class with `toHtmlPath` method
+- [ ] [test] Write failing test for inner class stripping `"org.slf4j.Logger$Factory" → "org/slf4j/Logger.html"`
+- [ ] [impl] Implement inner class suffix removal logic (split on `$`, take head)
+- [ ] [test] Write failing test for empty class name validation
+- [ ] [impl] Add validation logic in `ClassName.parse()` to reject empty strings
+- [ ] [impl] Add `PURPOSE:` comment to `ClassName.scala`
+- [ ] [setup] Commit: "feat(domain): add ClassName value object with HTML path mapping"
+
+### Domain Errors
+
+- [ ] [impl] Create `Errors.scala` with sealed trait `DocumentationError`
+- [ ] [impl] Add `case class ArtifactNotFound(coordinates: String)` extending `DocumentationError`
+- [ ] [impl] Add `case class ClassNotFound(className: String)` extending `DocumentationError`
+- [ ] [impl] Add `message: String` method to each error type with helpful text
+- [ ] [impl] Add `PURPOSE:` comment to `Errors.scala`
+- [ ] [setup] Commit: "feat(domain): add domain error types"
+
+### Documentation Entity
+
+- [ ] [impl] Create `Documentation.scala` with case class containing `htmlContent: String`, `className: String`
+- [ ] [impl] Add `PURPOSE:` comment to `Documentation.scala`
+- [ ] [setup] Commit: "feat(domain): add Documentation entity"
+
+---
+
+## Infrastructure Layer - Coursier Integration
+
+### CoursierArtifactRepository
+
+- [ ] [test] Write failing integration test for `fetchJavadocJar("org.slf4j:slf4j-api:2.0.9")` returns `Right(File)`
+- [ ] [impl] Create `CoursierArtifactRepository.scala` with `fetchJavadocJar` method
+- [ ] [impl] Implement Coursier `Fetch()` API call with `-javadoc` classifier
+- [ ] [impl] Run test, ensure it passes (downloads real JAR from Maven Central)
+- [ ] [test] Write failing test for non-existent artifact `"com.fake:nonexistent:1.0.0"` returns `Left(ArtifactNotFound)`
+- [ ] [impl] Wrap Coursier exceptions, map to domain errors
+- [ ] [impl] Add `PURPOSE:` comment to `CoursierArtifactRepository.scala`
+- [ ] [setup] Commit: "feat(infra): integrate Coursier for javadoc JAR fetching"
+
+### JarFileReader
+
+- [ ] [test] Write failing integration test: fetch slf4j JAR, then read `"org/slf4j/Logger.html"` from it
+- [ ] [impl] Create `JarFileReader.scala` with `readEntry(jarFile: File, path: String): Either[Error, String]`
+- [ ] [impl] Implement using `java.util.jar.JarFile` and `Source.fromInputStream`
+- [ ] [impl] Run test, verify HTML content contains "Logger"
+- [ ] [test] Write failing test for missing entry `"org/slf4j/NonExistent.html"` returns `Left(ClassNotFound)`
+- [ ] [impl] Handle missing JAR entry case, return appropriate error
+- [ ] [impl] Ensure JAR file is closed properly (use try-finally)
+- [ ] [impl] Add `PURPOSE:` comment to `JarFileReader.scala`
+- [ ] [setup] Commit: "feat(infra): add JAR file reader for HTML extraction"
+
+---
+
+## Application Layer - Service Orchestration
+
+### DocumentationService
+
+- [ ] [impl] Create `DocumentationService.scala` with `getDocumentation(coordinates: String, className: String): Either[DocumentationError, Documentation]`
+- [ ] [test] Write failing integration test: call with valid slf4j coordinates, expect `Right(Documentation)`
+- [ ] [impl] Wire together: parse coordinates → fetch JAR → parse className → read HTML → create Documentation
+- [ ] [impl] Run test, ensure end-to-end flow works
+- [ ] [test] Write failing test for invalid coordinates, expect `Left(ArtifactNotFound)`
+- [ ] [impl] Ensure errors propagate correctly through the flow
+- [ ] [test] Write failing test for valid artifact but missing class, expect `Left(ClassNotFound)`
+- [ ] [impl] Handle error case, verify test passes
+- [ ] [impl] Add `PURPOSE:` comment to `DocumentationService.scala`
+- [ ] [setup] Commit: "feat(app): add DocumentationService orchestration"
+
+---
+
+## Presentation Layer - MCP Server with Chimp
+
+### Tool Definitions
+
+- [ ] [impl] Create `ToolDefinitions.scala` with `case class GetDocInput(coordinates: String, className: String) derives Codec, Schema`
+- [ ] [impl] Define `getDocumentationTool` using Chimp's `tool("get_documentation").input[GetDocInput].handle(...)`
+- [ ] [impl] In handler, call `DocumentationService.getDocumentation`, map `Either` appropriately
+- [ ] [impl] Map `Right(doc)` to `Right(doc.htmlContent)` (return HTML string)
+- [ ] [impl] Map `Left(error)` to `Left(error.message)` (return error message)
+- [ ] [impl] Add tool description: "Fetch Javadoc HTML for a Java library class"
+- [ ] [impl] Add `PURPOSE:` comment to `ToolDefinitions.scala`
+- [ ] [setup] Commit: "feat(mcp): add get_documentation tool definition"
+
+### MCP Server Setup
+
+- [ ] [impl] Create `McpServer.scala` with `start(port: Int)` method
+- [ ] [impl] Create `mcpEndpoint` using Chimp's `mcpEndpoint(List(getDocumentationTool), List("mcp"))`
+- [ ] [impl] Create Netty server: `NettySyncServer().port(port).addEndpoint(mcpEndpoint).startAndWait()`
+- [ ] [impl] Add graceful shutdown logic
+- [ ] [impl] Add `PURPOSE:` comment to `McpServer.scala`
+- [ ] [setup] Commit: "feat(server): add MCP HTTP server with Netty"
+
+### Main Entry Point
+
+- [ ] [impl] Create `Main.scala` with `@main def run()` method
+- [ ] [impl] Parse port from args or use default 8080
+- [ ] [impl] Instantiate `DocumentationService` with dependencies
+- [ ] [impl] Call `McpServer.start(port)`
+- [ ] [impl] Add signal handling for graceful shutdown (Ctrl+C)
+- [ ] [impl] Add `PURPOSE:` comment to `Main.scala`
+- [ ] [setup] Commit: "feat(main): add application entry point"
+
+---
+
+## End-to-End Testing
+
+### E2E Test Setup
+
+- [ ] [test] Create `EndToEndTest.scala` in test directory
+- [ ] [test] Write test that starts server on test port (e.g., 8888)
+- [ ] [test] Simulate MCP client request to `get_documentation` tool
+- [ ] [test] Use `GetDocInput(coordinates = "org.slf4j:slf4j-api:2.0.9", className = "org.slf4j.Logger")`
+- [ ] [impl] Run E2E test, debug any wiring issues
+- [ ] [test] Assert response is `Right(html)` where html contains "Logger" and "void info(String msg)"
+- [ ] [test] Assert response time is under 5 seconds
+- [ ] [impl] Add server cleanup in test (stop server after test)
+
+### E2E Error Cases
+
+- [ ] [test] Write E2E test for non-existent artifact: expect error message "Artifact not found"
+- [ ] [impl] Verify error handling works end-to-end
+- [ ] [test] Write E2E test for non-existent class in valid artifact: expect "Class not found"
+- [ ] [impl] Ensure all error paths work correctly
+- [ ] [setup] Commit: "test: add E2E tests for get_documentation tool"
+
+---
+
+## Manual Verification
+
+### Claude Code Integration Test
+
+- [ ] [int] Start server locally: `scala-cli run . -- --port 8080`
+- [ ] [int] Configure Claude Code to connect to MCP server on `http://localhost:8080`
+- [ ] [int] From Claude Code, invoke `get_documentation` tool with slf4j coordinates
+- [ ] [int] Verify Claude Code receives valid HTML response
+- [ ] [int] Test error case: request non-existent class, verify error message is clear
+- [ ] [int] Document any issues discovered during manual testing
+- [ ] [setup] Commit any fixes found during manual testing
+
+---
+
+## Polish and Documentation
+
+### Code Quality
+
+- [ ] [impl] Review all files for compiler warnings, fix any found
+- [ ] [impl] Verify all files have `PURPOSE:` comment headers
+- [ ] [impl] Run full test suite, ensure all tests pass
+- [ ] [impl] Verify test output is pristine (no warnings, no error logs for successful tests)
+- [ ] [impl] Check for code duplication, refactor if needed
+- [ ] [impl] Ensure immutability throughout (no mutable variables)
+- [ ] [impl] Verify pure functions in domain layer (no side effects except infrastructure)
+
+### Testing Review
+
+- [ ] [test] Run all unit tests in isolation, verify they pass
+- [ ] [test] Run all integration tests, verify they work with real Maven Central
+- [ ] [test] Run E2E tests, verify complete flow works
+- [ ] [test] Check test coverage: all critical paths tested
+- [ ] [test] Verify no tests mock the functionality being tested
+
+### Final Documentation
+
+- [ ] [impl] Update `README.md` with Phase 1 completion status (optional)
+- [ ] [impl] Add comments explaining domain concepts where needed
+- [ ] [impl] Document any edge cases deferred to future phases
+- [ ] [setup] Final commit: "docs: add PURPOSE comments and polish Phase 1"
+
+---
+
+## Acceptance Checklist
+
+Before marking Phase 1 complete, verify ALL criteria:
+
+### Functional Requirements
+- [ ] MCP server starts on `localhost:8080` without errors
+- [ ] Server responds to MCP protocol handshake
+- [ ] `get_documentation` tool is registered and discoverable
+- [ ] Can fetch Javadoc for `org.slf4j:slf4j-api:2.0.9` → `org.slf4j.Logger`
+- [ ] Response contains valid HTML with method signatures
+- [ ] Response time is under 5 seconds for first request (uncached)
+- [ ] Error handling: Returns clear error for non-existent class
+- [ ] Error handling: Returns clear error for non-existent artifact
+
+### Code Quality
+- [ ] All code follows DDD structure (domain/application/infrastructure/presentation)
+- [ ] All functions are pure except at edges (I/O in infrastructure only)
+- [ ] Immutable data structures throughout
+- [ ] No compiler warnings
+- [ ] All files have `PURPOSE:` comment headers
+- [ ] Naming: Domain concepts clear, no implementation details in names
+
+### Testing
+- [ ] All unit tests pass (domain logic)
+- [ ] All integration tests pass (Coursier + JAR reading)
+- [ ] All E2E tests pass (full MCP flow)
+- [ ] Test coverage: All critical paths tested
+- [ ] Test output pristine: No warnings, no error logs for successful tests
+- [ ] Tests use real artifacts (no mocking of Maven Central)
+
+### Git Hygiene
+- [ ] Changes committed incrementally (not one giant commit)
+- [ ] Commit messages follow TDD pattern: "test: add X", "feat: implement X"
+- [ ] Pre-commit hooks run successfully (no `--no-verify`)
+- [ ] Working directory clean (no uncommitted changes)
+
+---
+
+## Notes
+
+**TDD Discipline:**
+- ALWAYS write the failing test BEFORE implementation
+- Run the test to see it fail with the expected error
+- Write ONLY enough code to make the test pass
+- Refactor while keeping tests green
+- Commit after each red-green-refactor cycle
+
+**Testing with Real Data:**
+- Use `org.slf4j:slf4j-api:2.0.9` as primary test artifact (stable, well-known)
+- Use `com.google.guava:guava:32.1.3-jre` as secondary test artifact
+- Let Coursier cache artifacts in `~/.cache/coursier` (persistent across runs)
+- NO MOCKING of Maven Central or Coursier (per project guidelines)
+
+**Task Estimation:**
+- Each task should take 15-30 minutes
+- If a task takes longer, break it down further
+- Commit frequently (every 2-3 tasks minimum)
+
+**Expected Total Time:** 4-6 hours for complete Phase 1
+
+---
+
+**Next Steps After Phase 1:**
+1. Mark all tasks complete
+2. Update `project-management/issues/JMC-1/tasks.md` - mark Phase 1 complete
+3. Run `/iterative-works:ag-implement JMC-1` to start Phase 2
