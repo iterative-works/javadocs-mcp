@@ -18,10 +18,10 @@ This phase establishes the foundational vertical slice: MCP HTTP server → Cour
 
 ## Setup Tasks
 
-- [ ] [setup] Add Chimp MCP dependencies to `project.scala`
-- [ ] [setup] Add Tapir Netty server dependency to `project.scala`
-- [ ] [setup] Add MUnit test dependency to `project.scala`
-- [ ] [setup] Create directory structure (`src/main/scala`, `src/test/scala`)
+- [x] [setup] Add Chimp MCP dependencies to `project.scala`
+- [x] [setup] Add Tapir Netty server dependency to `project.scala`
+- [x] [setup] Add MUnit test dependency to `project.scala`
+- [x] [setup] Create directory structure (`src/main/scala`, `src/test/scala`)
 - [ ] [setup] Verify `scala-cli compile .` works with new dependencies
 - [ ] [setup] Commit: "chore: add Chimp MCP and testing dependencies"
 
@@ -31,40 +31,40 @@ This phase establishes the foundational vertical slice: MCP HTTP server → Cour
 
 ### ArtifactCoordinates
 
-- [ ] [test] Write failing test for parsing valid Maven coordinates `"org.slf4j:slf4j-api:2.0.9"`
-- [ ] [impl] Implement `ArtifactCoordinates.parse()` to pass test (return `Either[Error, ArtifactCoordinates]`)
-- [ ] [test] Write failing test for coordinates with missing version `"org.slf4j:slf4j-api"`
-- [ ] [impl] Implement validation to return `Left(error)` for invalid format
-- [ ] [test] Write failing test for completely invalid format `"invalid"`
-- [ ] [impl] Handle edge case, ensure all tests pass
-- [ ] [impl] Add `PURPOSE:` comment to `ArtifactCoordinates.scala`
-- [ ] [setup] Commit: "feat(domain): add ArtifactCoordinates value object with validation"
+- [x] [test] Write failing test for parsing valid Maven coordinates `"org.slf4j:slf4j-api:2.0.9"`
+- [x] [impl] Implement `ArtifactCoordinates.parse()` to pass test (return `Either[Error, ArtifactCoordinates]`)
+- [x] [test] Write failing test for coordinates with missing version `"org.slf4j:slf4j-api"`
+- [x] [impl] Implement validation to return `Left(error)` for invalid format
+- [x] [test] Write failing test for completely invalid format `"invalid"`
+- [x] [impl] Handle edge case, ensure all tests pass
+- [x] [impl] Add `PURPOSE:` comment to `ArtifactCoordinates.scala`
+- [x] [setup] Commit: "feat(domain): add ArtifactCoordinates value object with validation"
 
 ### ClassName
 
-- [ ] [test] Write failing test for `ClassName("org.slf4j.Logger").toHtmlPath == "org/slf4j/Logger.html"`
-- [ ] [impl] Implement `ClassName` case class with `toHtmlPath` method
-- [ ] [test] Write failing test for inner class stripping `"org.slf4j.Logger$Factory" → "org/slf4j/Logger.html"`
-- [ ] [impl] Implement inner class suffix removal logic (split on `$`, take head)
-- [ ] [test] Write failing test for empty class name validation
-- [ ] [impl] Add validation logic in `ClassName.parse()` to reject empty strings
-- [ ] [impl] Add `PURPOSE:` comment to `ClassName.scala`
-- [ ] [setup] Commit: "feat(domain): add ClassName value object with HTML path mapping"
+- [x] [test] Write failing test for `ClassName("org.slf4j.Logger").toHtmlPath == "org/slf4j/Logger.html"`
+- [x] [impl] Implement `ClassName` case class with `toHtmlPath` method
+- [x] [test] Write failing test for inner class stripping `"org.slf4j.Logger$Factory" → "org/slf4j/Logger.html"`
+- [x] [impl] Implement inner class suffix removal logic (split on `$`, take head)
+- [x] [test] Write failing test for empty class name validation
+- [x] [impl] Add validation logic in `ClassName.parse()` to reject empty strings
+- [x] [impl] Add `PURPOSE:` comment to `ClassName.scala`
+- [x] [setup] Commit: "feat(domain): add ClassName value object with HTML path mapping"
 
 ### Domain Errors
 
-- [ ] [impl] Create `Errors.scala` with sealed trait `DocumentationError`
-- [ ] [impl] Add `case class ArtifactNotFound(coordinates: String)` extending `DocumentationError`
-- [ ] [impl] Add `case class ClassNotFound(className: String)` extending `DocumentationError`
-- [ ] [impl] Add `message: String` method to each error type with helpful text
-- [ ] [impl] Add `PURPOSE:` comment to `Errors.scala`
-- [ ] [setup] Commit: "feat(domain): add domain error types"
+- [x] [impl] Create `Errors.scala` with sealed trait `DocumentationError`
+- [x] [impl] Add `case class ArtifactNotFound(coordinates: String)` extending `DocumentationError`
+- [x] [impl] Add `case class ClassNotFound(className: String)` extending `DocumentationError`
+- [x] [impl] Add `message: String` method to each error type with helpful text
+- [x] [impl] Add `PURPOSE:` comment to `Errors.scala`
+- [x] [setup] Commit: "feat(domain): add domain error types"
 
 ### Documentation Entity
 
-- [ ] [impl] Create `Documentation.scala` with case class containing `htmlContent: String`, `className: String`
-- [ ] [impl] Add `PURPOSE:` comment to `Documentation.scala`
-- [ ] [setup] Commit: "feat(domain): add Documentation entity"
+- [x] [impl] Create `Documentation.scala` with case class containing `htmlContent: String`, `className: String`
+- [x] [impl] Add `PURPOSE:` comment to `Documentation.scala`
+- [x] [setup] Commit: "feat(domain): add Documentation entity"
 
 ---
 
@@ -72,26 +72,26 @@ This phase establishes the foundational vertical slice: MCP HTTP server → Cour
 
 ### CoursierArtifactRepository
 
-- [ ] [test] Write failing integration test for `fetchJavadocJar("org.slf4j:slf4j-api:2.0.9")` returns `Right(File)`
-- [ ] [impl] Create `CoursierArtifactRepository.scala` with `fetchJavadocJar` method
-- [ ] [impl] Implement Coursier `Fetch()` API call with `-javadoc` classifier
-- [ ] [impl] Run test, ensure it passes (downloads real JAR from Maven Central)
-- [ ] [test] Write failing test for non-existent artifact `"com.fake:nonexistent:1.0.0"` returns `Left(ArtifactNotFound)`
-- [ ] [impl] Wrap Coursier exceptions, map to domain errors
-- [ ] [impl] Add `PURPOSE:` comment to `CoursierArtifactRepository.scala`
-- [ ] [setup] Commit: "feat(infra): integrate Coursier for javadoc JAR fetching"
+- [x] [test] Write failing integration test for `fetchJavadocJar("org.slf4j:slf4j-api:2.0.9")` returns `Right(File)`
+- [x] [impl] Create `CoursierArtifactRepository.scala` with `fetchJavadocJar` method
+- [x] [impl] Implement Coursier `Fetch()` API call with `-javadoc` classifier
+- [x] [impl] Run test, ensure it passes (downloads real JAR from Maven Central)
+- [x] [test] Write failing test for non-existent artifact `"com.fake:nonexistent:1.0.0"` returns `Left(ArtifactNotFound)`
+- [x] [impl] Wrap Coursier exceptions, map to domain errors
+- [x] [impl] Add `PURPOSE:` comment to `CoursierArtifactRepository.scala`
+- [x] [setup] Commit: "feat(infra): integrate Coursier for javadoc JAR fetching"
 
 ### JarFileReader
 
-- [ ] [test] Write failing integration test: fetch slf4j JAR, then read `"org/slf4j/Logger.html"` from it
-- [ ] [impl] Create `JarFileReader.scala` with `readEntry(jarFile: File, path: String): Either[Error, String]`
-- [ ] [impl] Implement using `java.util.jar.JarFile` and `Source.fromInputStream`
-- [ ] [impl] Run test, verify HTML content contains "Logger"
-- [ ] [test] Write failing test for missing entry `"org/slf4j/NonExistent.html"` returns `Left(ClassNotFound)`
-- [ ] [impl] Handle missing JAR entry case, return appropriate error
-- [ ] [impl] Ensure JAR file is closed properly (use try-finally)
-- [ ] [impl] Add `PURPOSE:` comment to `JarFileReader.scala`
-- [ ] [setup] Commit: "feat(infra): add JAR file reader for HTML extraction"
+- [x] [test] Write failing integration test: fetch slf4j JAR, then read `"org/slf4j/Logger.html"` from it
+- [x] [impl] Create `JarFileReader.scala` with `readEntry(jarFile: File, path: String): Either[Error, String]`
+- [x] [impl] Implement using `java.util.jar.JarFile` and `Source.fromInputStream`
+- [x] [impl] Run test, verify HTML content contains "Logger"
+- [x] [test] Write failing test for missing entry `"org/slf4j/NonExistent.html"` returns `Left(ClassNotFound)`
+- [x] [impl] Handle missing JAR entry case, return appropriate error
+- [x] [impl] Ensure JAR file is closed properly (use try-finally)
+- [x] [impl] Add `PURPOSE:` comment to `JarFileReader.scala`
+- [x] [setup] Commit: "feat(infra): add JAR file reader for HTML extraction"
 
 ---
 
@@ -99,16 +99,16 @@ This phase establishes the foundational vertical slice: MCP HTTP server → Cour
 
 ### DocumentationService
 
-- [ ] [impl] Create `DocumentationService.scala` with `getDocumentation(coordinates: String, className: String): Either[DocumentationError, Documentation]`
-- [ ] [test] Write failing integration test: call with valid slf4j coordinates, expect `Right(Documentation)`
-- [ ] [impl] Wire together: parse coordinates → fetch JAR → parse className → read HTML → create Documentation
-- [ ] [impl] Run test, ensure end-to-end flow works
-- [ ] [test] Write failing test for invalid coordinates, expect `Left(ArtifactNotFound)`
-- [ ] [impl] Ensure errors propagate correctly through the flow
-- [ ] [test] Write failing test for valid artifact but missing class, expect `Left(ClassNotFound)`
-- [ ] [impl] Handle error case, verify test passes
-- [ ] [impl] Add `PURPOSE:` comment to `DocumentationService.scala`
-- [ ] [setup] Commit: "feat(app): add DocumentationService orchestration"
+- [x] [impl] Create `DocumentationService.scala` with `getDocumentation(coordinates: String, className: String): Either[DocumentationError, Documentation]`
+- [x] [test] Write failing integration test: call with valid slf4j coordinates, expect `Right(Documentation)`
+- [x] [impl] Wire together: parse coordinates → fetch JAR → parse className → read HTML → create Documentation
+- [x] [impl] Run test, ensure end-to-end flow works
+- [x] [test] Write failing test for invalid coordinates, expect `Left(ArtifactNotFound)`
+- [x] [impl] Ensure errors propagate correctly through the flow
+- [x] [test] Write failing test for valid artifact but missing class, expect `Left(ClassNotFound)`
+- [x] [impl] Handle error case, verify test passes
+- [x] [impl] Add `PURPOSE:` comment to `DocumentationService.scala`
+- [x] [setup] Commit: "feat(app): add DocumentationService orchestration"
 
 ---
 
@@ -116,33 +116,33 @@ This phase establishes the foundational vertical slice: MCP HTTP server → Cour
 
 ### Tool Definitions
 
-- [ ] [impl] Create `ToolDefinitions.scala` with `case class GetDocInput(coordinates: String, className: String) derives Codec, Schema`
-- [ ] [impl] Define `getDocumentationTool` using Chimp's `tool("get_documentation").input[GetDocInput].handle(...)`
-- [ ] [impl] In handler, call `DocumentationService.getDocumentation`, map `Either` appropriately
-- [ ] [impl] Map `Right(doc)` to `Right(doc.htmlContent)` (return HTML string)
-- [ ] [impl] Map `Left(error)` to `Left(error.message)` (return error message)
-- [ ] [impl] Add tool description: "Fetch Javadoc HTML for a Java library class"
-- [ ] [impl] Add `PURPOSE:` comment to `ToolDefinitions.scala`
-- [ ] [setup] Commit: "feat(mcp): add get_documentation tool definition"
+- [x] [impl] Create `ToolDefinitions.scala` with `case class GetDocInput(coordinates: String, className: String) derives Codec, Schema`
+- [x] [impl] Define `getDocumentationTool` using Chimp's `tool("get_documentation").input[GetDocInput].handle(...)`
+- [x] [impl] In handler, call `DocumentationService.getDocumentation`, map `Either` appropriately
+- [x] [impl] Map `Right(doc)` to `Right(doc.htmlContent)` (return HTML string)
+- [x] [impl] Map `Left(error)` to `Left(error.message)` (return error message)
+- [x] [impl] Add tool description: "Fetch Javadoc HTML for a Java library class"
+- [x] [impl] Add `PURPOSE:` comment to `ToolDefinitions.scala`
+- [x] [setup] Commit: "feat(mcp): add get_documentation tool definition"
 
 ### MCP Server Setup
 
-- [ ] [impl] Create `McpServer.scala` with `start(port: Int)` method
-- [ ] [impl] Create `mcpEndpoint` using Chimp's `mcpEndpoint(List(getDocumentationTool), List("mcp"))`
-- [ ] [impl] Create Netty server: `NettySyncServer().port(port).addEndpoint(mcpEndpoint).startAndWait()`
-- [ ] [impl] Add graceful shutdown logic
-- [ ] [impl] Add `PURPOSE:` comment to `McpServer.scala`
-- [ ] [setup] Commit: "feat(server): add MCP HTTP server with Netty"
+- [x] [impl] Create `McpServer.scala` with `start(port: Int)` method
+- [x] [impl] Create `mcpEndpoint` using Chimp's `mcpEndpoint(List(getDocumentationTool), List("mcp"))`
+- [x] [impl] Create Netty server: `NettySyncServer().port(port).addEndpoint(mcpEndpoint).startAndWait()`
+- [x] [impl] Add graceful shutdown logic
+- [x] [impl] Add `PURPOSE:` comment to `McpServer.scala`
+- [x] [setup] Commit: "feat(server): add MCP HTTP server with Netty"
 
 ### Main Entry Point
 
-- [ ] [impl] Create `Main.scala` with `@main def run()` method
-- [ ] [impl] Parse port from args or use default 8080
-- [ ] [impl] Instantiate `DocumentationService` with dependencies
-- [ ] [impl] Call `McpServer.start(port)`
-- [ ] [impl] Add signal handling for graceful shutdown (Ctrl+C)
-- [ ] [impl] Add `PURPOSE:` comment to `Main.scala`
-- [ ] [setup] Commit: "feat(main): add application entry point"
+- [x] [impl] Create `Main.scala` with `@main def run()` method
+- [x] [impl] Parse port from args or use default 8080
+- [x] [impl] Instantiate `DocumentationService` with dependencies
+- [x] [impl] Call `McpServer.start(port)`
+- [x] [impl] Add signal handling for graceful shutdown (Ctrl+C)
+- [x] [impl] Add `PURPOSE:` comment to `Main.scala`
+- [x] [setup] Commit: "feat(main): add application entry point"
 
 ---
 
