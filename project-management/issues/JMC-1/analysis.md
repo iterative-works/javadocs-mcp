@@ -23,6 +23,52 @@ Unlike stdio-based MCP servers (one per project), an HTTP-based server can be sh
 
 ---
 
+## Technology Decision: Chimp MCP Library
+
+**Decision:** Use [Chimp](https://github.com/softwaremill/chimp) (SoftwareMill) for MCP server implementation.
+
+**Rationale:**
+- Native Scala 3 library with type-safe tool definitions
+- Built on Tapir + Circe - familiar, well-maintained ecosystem
+- Automatic JSON Schema generation from case classes via `derives`
+- HTTP transport built-in (MCP spec 2025-03-26)
+- Clean, minimal API focused on tools (exactly what we need)
+- Commercial support available from SoftwareMill
+- Active development (v0.1.6, 124 commits, 58 stars)
+
+**What Chimp provides:**
+- MCP HTTP server with JSON-RPC
+- Tool registration and invocation
+- Input schema auto-generation from Scala case classes
+- Error handling per MCP spec
+
+**What we still implement:**
+- Coursier integration for artifact resolution
+- JAR file extraction logic
+- Domain logic (coordinate parsing, class name mapping)
+- Caching layer
+
+**Dependencies:**
+```scala
+//> using dep "com.softwaremill.chimp::chimp-core:0.1.6"
+//> using dep "com.softwaremill.sttp.tapir::tapir-netty-server-sync:1.11.11"
+```
+
+**Example tool definition with Chimp:**
+```scala
+case class GetDocInput(coordinates: String, className: String) derives Codec, Schema
+
+val getDocTool = tool("get_documentation")
+  .description("Fetch Javadoc/Scaladoc HTML for a class")
+  .input[GetDocInput]
+  .handle(input => documentationService.getDocumentation(input.coordinates, input.className))
+
+val mcpEndpoint = mcpEndpoint(List(getDocTool), List("mcp"))
+NettySyncServer().port(8080).addEndpoint(mcpEndpoint).startAndWait()
+```
+
+---
+
 ## User Stories
 
 ### Story 1: Fetch Javadoc HTML for a Java library class
@@ -43,23 +89,25 @@ Scenario: Successfully fetch Javadoc for a standard Java library class
   And the response time is under 5 seconds for first request
 ```
 
-**Estimated Effort:** 8-12h
-**Complexity:** Complex
+**Estimated Effort:** 4-6h
+**Complexity:** Moderate
 
 **Technical Feasibility:**
 
-This is the foundational story that establishes the entire vertical slice. Complexity comes from:
-- Setting up HTTP MCP server with SSE transport (new territory)
+This is the foundational story that establishes the entire vertical slice. With Chimp handling MCP transport, complexity is reduced to:
 - Integrating Coursier to resolve and download `-javadoc.jar` artifacts
 - Parsing JAR files to extract specific class documentation
 - Mapping class names to file paths within JARs (`org.slf4j.Logger` → `org/slf4j/Logger.html`)
-- Handling various Javadoc HTML structures (different tools generate different formats)
 
 **Key Technical Challenges:**
-- MCP HTTP transport protocol implementation (need to understand SSE, JSON-RPC over HTTP)
 - Coursier API for fetching artifacts with specific classifiers (`-javadoc`)
 - JAR file traversal and HTML extraction
 - Error handling when artifact/class doesn't exist
+
+**Handled by Chimp:**
+- MCP HTTP transport (JSON-RPC over HTTP)
+- Tool registration and schema generation
+- Request/response serialization
 
 **Acceptance:**
 - Claude Code can connect to the running HTTP MCP server
@@ -354,11 +402,11 @@ Two-level caching strategy:
 - `JarFileReader` - Utility to read JAR contents
 - `FileSystemCache` - Cache interface (Coursier's cache)
 
-**Presentation Layer:**
-- `MCPServer` - HTTP server with SSE transport
-- `MCPToolRegistry` - Registry of available tools
-- `GetDocumentationTool` - MCP tool implementation
-- Tool schema definition (JSON schema for parameters)
+**Presentation Layer (via Chimp):**
+- `GetDocInput` - Case class with `derives Codec, Schema` for auto-schema generation
+- `getDocumentationTool` - Chimp tool definition using `tool().input[].handle()`
+- `mcpEndpoint` - Chimp MCP endpoint aggregating tools
+- `NettySyncServer` - Tapir Netty server hosting the MCP endpoint
 
 ---
 
@@ -379,10 +427,10 @@ Two-level caching strategy:
 - Reuse `JarFileReader` from Story 1
 - Extend for `-sources` classifier
 
-**Presentation Layer:**
-- `GetSourceTool` - MCP tool implementation
-- Register in existing `MCPToolRegistry`
-- Tool schema definition
+**Presentation Layer (via Chimp):**
+- `GetSourceInput` - Case class with `derives Codec, Schema`
+- `getSourceTool` - Chimp tool definition
+- Added to existing `mcpEndpoint` tools list
 
 ---
 
@@ -401,9 +449,9 @@ Two-level caching strategy:
 - Extend `CoursierArtifactRepository` to handle Scala artifact resolution
 - Reuse JAR reading infrastructure
 
-**Presentation Layer:**
-- Extend `GetDocumentationTool` to accept both Java and Scala coordinates
-- Update tool schema to document coordinate formats
+**Presentation Layer (via Chimp):**
+- Same `GetDocInput` case class handles both Java (`:`) and Scala (`::`) coordinates
+- Tool description updated to document coordinate formats
 
 ---
 
@@ -420,9 +468,9 @@ Two-level caching strategy:
 **Infrastructure Layer:**
 - Reuse all infrastructure from previous stories
 
-**Presentation Layer:**
-- Reuse `GetSourceTool` from Story 2
-- Update documentation with Scala examples
+**Presentation Layer (via Chimp):**
+- Reuse `getSourceTool` from Story 2
+- Update tool description with Scala examples
 
 ---
 
@@ -443,10 +491,10 @@ Two-level caching strategy:
 - Map to domain errors
 - Logging infrastructure
 
-**Presentation Layer:**
-- MCP error response formatting (JSON-RPC error structure)
-- Error message templates
-- HTTP status codes for errors
+**Presentation Layer (via Chimp):**
+- Chimp handles MCP error response formatting (returns `Left(errorMessage)`)
+- Error message templates in domain layer
+- Chimp translates to proper JSON-RPC error structure
 
 ---
 
@@ -464,9 +512,9 @@ Two-level caching strategy:
 - `JarFileReader` extension: list entries, check existence
 - File path mapping validation
 
-**Presentation Layer:**
-- User-friendly error messages
-- Suggestion logic (case-sensitivity hints)
+**Presentation Layer (via Chimp):**
+- User-friendly error messages returned via `Left(message)`
+- Suggestion logic (case-sensitivity hints) in domain/application layer
 
 ---
 
@@ -488,40 +536,25 @@ Two-level caching strategy:
 
 **Presentation Layer:**
 - Cache statistics logging
-- Optional cache-control headers (for future)
+- Caching is transparent to Chimp layer (applied in application/domain services)
 
 ---
 
 ## Technical Risks & Uncertainties
 
-### CLARIFY: HTTP MCP Server Implementation
+### ✅ RESOLVED: HTTP MCP Server Implementation
 
-We need to implement HTTP-based MCP transport with SSE. This is relatively new territory.
+**Decision:** Use **Chimp** (SoftwareMill) - a Scala 3 MCP library built on Tapir.
 
-**Questions to answer:**
+**Research conducted:** Evaluated linkyard/scala-effect-mcp, indoorvivants/mcp, official Java SDK, and Chimp. Chimp was selected for its clean API, Tapir integration, and tools-focused design matching our needs.
 
-1. Should we use a high-level framework (Tapir + http4s) or lower-level HTTP library?
-2. What's the exact MCP HTTP transport specification? (SSE format, JSON-RPC structure)
-3. Do we need full SSE bi-directional streaming or just server→client?
-4. How should we handle MCP protocol versioning?
+**What this resolves:**
+- HTTP transport: Handled by Chimp + Tapir Netty server
+- JSON-RPC protocol: Handled by Chimp
+- Tool schema generation: Auto-derived from case classes via `derives Codec, Schema`
+- MCP protocol version: Chimp implements MCP spec 2025-03-26
 
-**Options:**
-
-- **Option A: Tapir + http4s (cats-effect)** - Type-safe, functional, well-documented
-  - Pros: Type safety, compositional, excellent Scala 3 support, streaming support
-  - Cons: Heavier dependency tree, learning curve, might be overkill for simple MVP
-
-- **Option B: Simple http4s + cats-effect** - Lower-level but still functional
-  - Pros: Full control, lighter than Tapir, good streaming support
-  - Cons: More manual JSON-RPC handling, less type safety
-
-- **Option C: cask (Li Haoyi's HTTP library)** - Scala-CLI friendly, simple
-  - Pros: Very simple, minimal dependencies, quick to get started
-  - Cons: Less production-ready, weaker streaming support, less functional
-
-**Impact:** Affects Story 1 implementation complexity and all subsequent stories. Decision needed before starting.
-
-**Recommendation:** I lean toward **Option B (http4s + cats-effect)** for balance of simplicity and capability, but need your input Michal.
+**Impact on estimates:** Story 1 reduced from 8-12h to 4-6h.
 
 ---
 
@@ -616,135 +649,89 @@ How do we know whether to look for Scaladoc or Javadoc for a given artifact?
 
 ---
 
-### CLARIFY: MCP Tool Schema Design
+### ✅ RESOLVED: MCP Tool Schema Design
 
-What should the exact JSON schema be for the two tools?
+**Decision:** Use simple string parameters with Chimp's auto-schema generation.
 
-**Questions to answer:**
+```scala
+case class GetDocInput(coordinates: String, className: String) derives Codec, Schema
+case class GetSourceInput(coordinates: String, className: String) derives Codec, Schema
+```
 
-1. Should coordinates be a single string or separate fields (groupId, artifactId, version)?
-2. Should className support wildcards or just exact matches?
-3. Do we need optional parameters (e.g., `scalaVersion`, `repository`)?
-4. What's the response format? (plain text, structured JSON, both?)
+**Generated JSON Schema:**
+```json
+{
+  "coordinates": "org.typelevel::cats-effect:3.5.4",
+  "className": "cats.effect.IO"
+}
+```
 
-**Options:**
-
-- **Option A: Simple string parameters**
-  ```json
-  {
-    "coordinates": "org.typelevel::cats-effect:3.5.4",
-    "className": "cats.effect.IO"
-  }
-  ```
-  - Pros: Easy to use, familiar format
-  - Cons: No validation until runtime
-
-- **Option B: Structured coordinates**
-  ```json
-  {
-    "groupId": "org.typelevel",
-    "artifactId": "cats-effect_3",
-    "version": "3.5.4",
-    "className": "cats.effect.IO"
-  }
-  ```
-  - Pros: Validated, unambiguous
-  - Cons: More verbose, burden on caller
-
-- **Option C: Hybrid - string with validation**
-  ```json
-  {
-    "coordinates": "org.typelevel::cats-effect:3.5.4",  // validated format
-    "className": "cats.effect.IO"
-  }
-  ```
-  - Pros: Balance of simplicity and safety
-  - Cons: Validation rules must be documented
-
-**Impact:** Affects all stories, user experience, and API evolution.
-
-**Recommendation:** **Option C** - string coordinates with documented format and runtime validation.
+**Rationale:**
+- Simple, familiar Maven/Coursier coordinate format
+- Chimp auto-generates JSON Schema from case class
+- Runtime validation in domain layer (coordinate parsing)
+- No wildcards for MVP (exact class matches only)
 
 ---
 
-### CLARIFY: Error Response Format
+### ✅ RESOLVED: Error Response Format
 
-What structure should error responses have?
+**Decision:** Use Chimp's built-in error handling with descriptive messages.
 
-**Questions to answer:**
+Chimp tool handlers return `Either[String, String]`:
+- `Right(content)` → Success response with content
+- `Left(errorMessage)` → MCP error response with message
 
-1. Should errors include error codes or just messages?
-2. Do we include suggestions in error responses?
-3. Should errors include debug info (stack traces, timing)?
-4. What's the MCP standard for error responses?
+**Error message format (in domain layer):**
+```
+Artifact not found: org.example:fake:1.0.0
+Check spelling and verify the artifact exists on Maven Central.
+```
 
-**Options:**
+Chimp translates this to proper JSON-RPC error structure per MCP spec.
 
-- **Option A: Simple message string** - MCP JSON-RPC error with message
-  - Pros: Simple, standard
-  - Cons: Less structured, harder to parse programmatically
-
-- **Option B: Structured error object**
-  ```json
-  {
-    "error": {
-      "code": "ARTIFACT_NOT_FOUND",
-      "message": "Artifact org.example:fake:1.0.0 not found",
-      "suggestions": ["Check spelling", "Verify version exists"]
-    }
-  }
-  ```
-  - Pros: Parseable, actionable, user-friendly
-  - Cons: More complex, need error code taxonomy
-
-- **Option C: Hybrid - message + optional data**
-  - Pros: Backwards compatible, extensible
-  - Cons: Less consistent
-
-**Impact:** Affects Stories 5-6 and overall UX.
-
-**Recommendation:** **Option B** - structured errors with codes and suggestions.
+**Rationale:**
+- Simple, follows MCP standard
+- Descriptive messages include suggestions inline
+- No need for custom error code taxonomy for MVP
 
 ---
 
 ## Total Estimates
 
-**Story Breakdown:**
-- Story 1 (Fetch Javadoc for Java class): 8-12 hours
-- Story 2 (Fetch source for Java class): 4-6 hours
-- Story 3 (Fetch Scaladoc for Scala class): 3-4 hours
-- Story 4 (Fetch source for Scala class): 2-3 hours
-- Story 5 (Handle missing artifacts): 3-4 hours
+**Story Breakdown (revised with Chimp):**
+- Story 1 (Fetch Javadoc for Java class): **4-6 hours** *(reduced from 8-12h)*
+- Story 2 (Fetch source for Java class): 3-4 hours *(slightly reduced)*
+- Story 3 (Fetch Scaladoc for Scala class): 2-3 hours *(slightly reduced)*
+- Story 4 (Fetch source for Scala class): 1-2 hours *(slightly reduced)*
+- Story 5 (Handle missing artifacts): 2-3 hours *(slightly reduced)*
 - Story 6 (Handle missing classes): 2-3 hours
 - Story 7 (In-memory caching): 4-6 hours
 
-**Total Range:** 26-38 hours
+**Total Range:** 18-27 hours *(reduced from 26-38h)*
 
-**Confidence:** Medium
+**Confidence:** Medium-High
 
 **Reasoning:**
 
-- **Story 1 complexity drives the estimate**: First vertical slice with MCP HTTP server, Coursier integration, JAR handling - this is where most unknowns live. Could be 8h if we hit no snags, could be 12h if HTTP MCP transport is tricky.
+- **Story 1 complexity significantly reduced**: With Chimp handling MCP transport, JSON-RPC, and schema generation, Story 1 focuses only on Coursier integration and JAR extraction. Main unknowns are Coursier API and JAR file handling.
 
-- **Stories 2-4 build on foundation**: Once Story 1 works, Stories 2-4 are mostly variations on the same pattern. Confidence is higher here.
+- **Stories 2-4 build on foundation**: Once Story 1 works, Stories 2-4 are mostly variations on the same pattern. Confidence is high.
 
 - **Error handling is well-understood**: Stories 5-6 are straightforward exception handling and validation. Low risk.
 
 - **Caching adds moderate complexity**: Story 7 involves concurrency and memory management, but patterns are well-known.
 
-- **CLARIFY markers add uncertainty**: Several decisions need to be made before we can refine estimates. HTTP library choice (Option A vs B vs C) could swing Story 1 by ±3 hours.
+- **Most CLARIFY markers resolved**: HTTP library, tool schema, and error format decisions are made. Remaining CLARIFYs are lower-risk.
 
 - **Testing time included**: Each story estimate includes unit tests, integration tests, and scenario tests per TDD guidelines.
 
-**Risk factors:**
-- MCP HTTP specification interpretation (might need research)
+**Remaining risk factors:**
 - Coursier API learning curve (mitigated by good docs)
 - Edge cases in JAR file structures (javadoc format variations)
 - Scala version handling subtleties
 
 **Mitigation:**
-- Resolve CLARIFY markers before starting
-- Spike on MCP HTTP transport before Story 1 (2-3h exploration not in estimates)
 - Start with well-known artifacts (slf4j, cats-effect) for testing
 - Defer edge cases to post-MVP backlog
 
@@ -1039,12 +1026,12 @@ LOG_LEVEL=INFO                    # Log level (default: INFO)
 
 **Before starting Story 1:**
 
-- Scala CLI installed and working
-- JVM 21 available
-- Coursier dependency added to `project.scala`
-- HTTP library dependency (need to choose - see CLARIFY)
-- MCP specification documentation (need to review)
-- Test framework setup (ScalaTest, MUnit, or similar)
+- ✅ Scala CLI installed and working
+- ✅ JVM 21 available
+- ✅ Coursier dependency added to `project.scala`
+- ✅ **Chimp MCP library** - `com.softwaremill.chimp::chimp-core:0.1.6`
+- ✅ **Tapir Netty server** - `com.softwaremill.sttp.tapir::tapir-netty-server-sync:1.11.11`
+- ⚠️ Test framework setup (MUnit recommended for Scala 3)
 
 **External accounts/access:**
 
@@ -1090,8 +1077,7 @@ LOG_LEVEL=INFO                    # Log level (default: INFO)
 
 **Potential blockers:**
 
-- **MCP HTTP specification clarity**: If spec is ambiguous, might need to ask Anthropic or community
-  - *Mitigation*: Review existing HTTP MCP implementations, ask in MCP community
+- ~~**MCP HTTP specification clarity**~~: Resolved - Chimp handles MCP protocol
 
 - **Maven Central availability**: If Maven Central is down, testing blocked
   - *Mitigation*: Use local Coursier cache for testing, have offline fallback fixtures
@@ -1101,6 +1087,9 @@ LOG_LEVEL=INFO                    # Log level (default: INFO)
 
 - **Claude Code compatibility**: If Claude Code's MCP client has quirks
   - *Mitigation*: Test early with real Claude Code instance, not just raw HTTP
+
+- **Chimp library issues**: If Chimp 0.1.6 has bugs or missing features
+  - *Mitigation*: Library is from SoftwareMill (reputable), active development; can fall back to linkyard/scala-effect-mcp if needed
 
 **No blockers from other teams:**
 - Solo project, no dependencies on external teams
@@ -1152,27 +1141,27 @@ LOG_LEVEL=INFO                    # Log level (default: INFO)
 
 ---
 
-**Iteration Plan:**
+**Iteration Plan (revised with Chimp):**
 
-**Iteration 1 (Stories 1-2): Java library support - ~12-18 hours**
+**Iteration 1 (Stories 1-2): Java library support - ~7-10 hours**
 - Goal: Working MCP server that can fetch Java docs and sources
 - Deliverable: Claude Code can look up `org.slf4j.Logger` docs and source
-- Risk: High (first iteration, most unknowns)
+- Risk: Medium (Coursier API learning, JAR handling)
 - Milestone: "Java MVP"
 
-**Iteration 2 (Stories 3-4): Scala library support - ~5-7 hours**
+**Iteration 2 (Stories 3-4): Scala library support - ~3-5 hours**
 - Goal: Extend to Scala ecosystem
 - Deliverable: Claude Code can look up `cats.effect.IO` docs and source
 - Risk: Low (builds on proven infrastructure)
 - Milestone: "Full JVM MVP"
 
-**Iteration 3 (Stories 5-7): Production hardening - ~9-13 hours**
+**Iteration 3 (Stories 5-7): Production hardening - ~8-12 hours**
 - Goal: Error handling and performance
 - Deliverable: Robust, fast, production-ready server
 - Risk: Low (well-understood patterns)
 - Milestone: "Production MVP"
 
-**Total: 26-38 hours across 3 iterations**
+**Total: 18-27 hours across 3 iterations** *(reduced from 26-38h thanks to Chimp)*
 
 **Demo points:**
 - After Iteration 1: Demo Java library lookup to validate approach
@@ -1232,47 +1221,32 @@ LOG_LEVEL=INFO                    # Log level (default: INFO)
 
 ---
 
-**Analysis Status:** Ready for Review
+**Analysis Status:** Ready for Implementation
+
+**Key Decisions Made:**
+- ✅ **MCP Library:** Chimp (SoftwareMill) - Tapir-based, type-safe tools
+- ✅ **Tool Schema:** Auto-derived from case classes via `derives Codec, Schema`
+- ✅ **Error Handling:** Chimp's `Either[String, String]` with descriptive messages
 
 **Next Steps:**
 
-1. **Resolve CLARIFY markers** - Michal, I need your input on:
-   - HTTP library choice (Tapir+http4s vs http4s vs cask)
-   - MCP tool schema design (string vs structured coordinates)
-   - Error response format preferences
-   - Caching strategy confirmation
+1. Run `/iterative-works:ag-create-tasks JMC-1` to break down stories into implementation tasks
 
-2. **Review story prioritization** - Does the recommended sequence (1→2→3→4→5→6→7) align with your priorities?
-
-3. **Validate estimates** - Do 26-38 hours total feel reasonable for this MVP scope?
-
-4. **Confirm scope boundaries** - Anything in "Out of Scope" that should actually be in MVP?
-
-5. **Once CLARIFY markers resolved**: Run `/iterative-works:ag-create-tasks JMC-1` to break down stories into implementation tasks
-
-6. **Then start implementation**: Run `/iterative-works:ag-implement JMC-1` for iterative story-by-story development
+2. Run `/iterative-works:ag-implement JMC-1` for iterative story-by-story development
 
 ---
 
-**Critical Questions for Michal:**
+**Remaining Questions for Michal:**
 
-1. **HTTP library choice** - This affects Story 1 complexity significantly. What's your preference?
-   - http4s + cats-effect (my recommendation for balance)
-   - Tapir + http4s (more type-safe, heavier)
-   - cask (simplest, less production-ready)
+1. **Testing framework** - What should we use?
+   - MUnit (recommended for Scala 3, lighter)
+   - ScalaTest (most popular, more verbose)
 
-2. **Testing framework** - What should I use?
-   - ScalaTest (most popular)
-   - MUnit (lighter, Scala-native-friendly)
-   - Other?
+2. **Story prioritization** - Current order prioritizes Java first. Should Scala come first instead?
+   - Current: Story 1 (Java docs) → Story 2 (Java source) → Story 3 (Scala docs) → Story 4 (Scala source)
+   - Alternative: Story 1 → Story 3 → Story 2 → Story 4 (Scala docs before Java source)
 
-3. **Primary use case** - Should I prioritize Java or Scala in Story 2 vs Story 3?
-   - If mostly Scala projects → do Story 3 before Story 2
-   - If mixed → current order is good
-
-4. **Time pressure** - Is there a deadline? Should I:
-   - Aim for all 7 stories (26-38h)
-   - Stop after Story 4 (17-25h, full functionality, minimal error handling)
-   - Stop after Story 6 (22-32h, skip caching for now)
-
-Something strange is afoot at the Circle K on the CLARIFY markers - there are quite a few uncertainties here. Should we spike on MCP HTTP transport (2-3h exploration) before committing to Story 1 estimates?
+3. **Scope** - With reduced estimates (18-27h), do all 7 stories still make sense?
+   - All 7 stories: Full MVP with caching
+   - Stories 1-6: Skip caching for now (saves 4-6h)
+   - Stories 1-4: Core functionality only (saves 8-12h)
