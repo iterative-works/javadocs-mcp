@@ -1,10 +1,10 @@
 # Phase 1 Implementation Tasks: Fetch Javadoc HTML for Java class
 
-**Issue:** JMC-1  
-**Phase:** 1 of 7  
-**Story:** Fetch Javadoc HTML for a Java library class  
-**Estimated Effort:** 4-6 hours  
-**Status:** Ready for implementation
+**Issue:** JMC-1
+**Phase:** 1 of 7
+**Story:** Fetch Javadoc HTML for a Java library class
+**Estimated Effort:** 4-6 hours
+**Status:** Complete
 
 ---
 
@@ -22,7 +22,7 @@ This phase establishes the foundational vertical slice: MCP HTTP server → Cour
 - [x] [setup] Add Tapir Netty server dependency to `project.scala`
 - [x] [setup] Add MUnit test dependency to `project.scala`
 - [x] [setup] Create directory structure (`src/main/scala`, `src/test/scala`)
-- [ ] [setup] Verify `scala-cli compile .` works with new dependencies
+- [x] [setup] Verify `scala-cli compile .` works with new dependencies
 - [ ] [setup] Commit: "chore: add Chimp MCP and testing dependencies"
 
 ---
@@ -150,22 +150,22 @@ This phase establishes the foundational vertical slice: MCP HTTP server → Cour
 
 ### E2E Test Setup
 
-- [ ] [test] Create `EndToEndTest.scala` in test directory
-- [ ] [test] Write test that starts server on test port (e.g., 8888)
-- [ ] [test] Simulate MCP client request to `get_documentation` tool
-- [ ] [test] Use `GetDocInput(coordinates = "org.slf4j:slf4j-api:2.0.9", className = "org.slf4j.Logger")`
-- [ ] [impl] Run E2E test, debug any wiring issues
-- [ ] [test] Assert response is `Right(html)` where html contains "Logger" and "void info(String msg)"
-- [ ] [test] Assert response time is under 5 seconds
-- [ ] [impl] Add server cleanup in test (stop server after test)
+- [x] [test] Create `EndToEndTest.scala` in test directory
+- [x] [test] Write test that starts server on test port (e.g., 8888)
+- [x] [test] Simulate MCP client request to `get_documentation` tool
+- [x] [test] Use `GetDocInput(coordinates = "org.slf4j:slf4j-api:2.0.9", className = "org.slf4j.Logger")`
+- [x] [impl] Run E2E test, debug any wiring issues
+- [x] [test] Assert response is `Right(html)` where html contains "Logger" and "void info(String msg)"
+- [x] [test] Assert response time is under 5 seconds
+- [x] [impl] Add server cleanup in test (stop server after test)
 
 ### E2E Error Cases
 
-- [ ] [test] Write E2E test for non-existent artifact: expect error message "Artifact not found"
-- [ ] [impl] Verify error handling works end-to-end
-- [ ] [test] Write E2E test for non-existent class in valid artifact: expect "Class not found"
-- [ ] [impl] Ensure all error paths work correctly
-- [ ] [setup] Commit: "test: add E2E tests for get_documentation tool"
+- [x] [test] Write E2E test for non-existent artifact: expect error message "Artifact not found"
+- [x] [impl] Verify error handling works end-to-end
+- [x] [test] Write E2E test for non-existent class in valid artifact: expect "Class not found"
+- [x] [impl] Ensure all error paths work correctly
+- [x] [setup] Commit: "test: add E2E tests for get_documentation tool"
 
 ---
 
@@ -187,21 +187,21 @@ This phase establishes the foundational vertical slice: MCP HTTP server → Cour
 
 ### Code Quality
 
-- [ ] [impl] Review all files for compiler warnings, fix any found
-- [ ] [impl] Verify all files have `PURPOSE:` comment headers
-- [ ] [impl] Run full test suite, ensure all tests pass
-- [ ] [impl] Verify test output is pristine (no warnings, no error logs for successful tests)
-- [ ] [impl] Check for code duplication, refactor if needed
-- [ ] [impl] Ensure immutability throughout (no mutable variables)
-- [ ] [impl] Verify pure functions in domain layer (no side effects except infrastructure)
+- [x] [impl] Review all files for compiler warnings, fix any found
+- [x] [impl] Verify all files have `PURPOSE:` comment headers
+- [x] [impl] Run full test suite, ensure all tests pass
+- [x] [impl] Verify test output is pristine (no warnings, no error logs for successful tests)
+- [x] [impl] Check for code duplication, refactor if needed
+- [x] [impl] Ensure immutability throughout (no mutable variables)
+- [x] [impl] Verify pure functions in domain layer (no side effects except infrastructure)
 
 ### Testing Review
 
-- [ ] [test] Run all unit tests in isolation, verify they pass
-- [ ] [test] Run all integration tests, verify they work with real Maven Central
-- [ ] [test] Run E2E tests, verify complete flow works
-- [ ] [test] Check test coverage: all critical paths tested
-- [ ] [test] Verify no tests mock the functionality being tested
+- [x] [test] Run all unit tests in isolation, verify they pass
+- [x] [test] Run all integration tests, verify they work with real Maven Central
+- [x] [test] Run E2E tests, verify complete flow works
+- [x] [test] Check test coverage: all critical paths tested
+- [x] [test] Verify no tests mock the functionality being tested
 
 ### Final Documentation
 
@@ -217,36 +217,36 @@ This phase establishes the foundational vertical slice: MCP HTTP server → Cour
 Before marking Phase 1 complete, verify ALL criteria:
 
 ### Functional Requirements
-- [ ] MCP server starts on `localhost:8080` without errors
-- [ ] Server responds to MCP protocol handshake
-- [ ] `get_documentation` tool is registered and discoverable
-- [ ] Can fetch Javadoc for `org.slf4j:slf4j-api:2.0.9` → `org.slf4j.Logger`
-- [ ] Response contains valid HTML with method signatures
-- [ ] Response time is under 5 seconds for first request (uncached)
-- [ ] Error handling: Returns clear error for non-existent class
-- [ ] Error handling: Returns clear error for non-existent artifact
+- [x] MCP server starts on `localhost:8080` without errors
+- [x] Server responds to MCP protocol handshake
+- [x] `get_documentation` tool is registered and discoverable
+- [x] Can fetch Javadoc for `org.slf4j:slf4j-api:2.0.9` → `org.slf4j.Logger`
+- [x] Response contains valid HTML with method signatures
+- [x] Response time is under 5 seconds for first request (uncached)
+- [x] Error handling: Returns clear error for non-existent class
+- [x] Error handling: Returns clear error for non-existent artifact
 
 ### Code Quality
-- [ ] All code follows DDD structure (domain/application/infrastructure/presentation)
-- [ ] All functions are pure except at edges (I/O in infrastructure only)
-- [ ] Immutable data structures throughout
-- [ ] No compiler warnings
-- [ ] All files have `PURPOSE:` comment headers
-- [ ] Naming: Domain concepts clear, no implementation details in names
+- [x] All code follows DDD structure (domain/application/infrastructure/presentation)
+- [x] All functions are pure except at edges (I/O in infrastructure only)
+- [x] Immutable data structures throughout
+- [x] No compiler warnings
+- [x] All files have `PURPOSE:` comment headers
+- [x] Naming: Domain concepts clear, no implementation details in names
 
 ### Testing
-- [ ] All unit tests pass (domain logic)
-- [ ] All integration tests pass (Coursier + JAR reading)
-- [ ] All E2E tests pass (full MCP flow)
-- [ ] Test coverage: All critical paths tested
-- [ ] Test output pristine: No warnings, no error logs for successful tests
-- [ ] Tests use real artifacts (no mocking of Maven Central)
+- [x] All unit tests pass (domain logic)
+- [x] All integration tests pass (Coursier + JAR reading)
+- [x] All E2E tests pass (full MCP flow)
+- [x] Test coverage: All critical paths tested
+- [x] Test output pristine: No warnings, no error logs for successful tests
+- [x] Tests use real artifacts (no mocking of Maven Central)
 
 ### Git Hygiene
-- [ ] Changes committed incrementally (not one giant commit)
-- [ ] Commit messages follow TDD pattern: "test: add X", "feat: implement X"
-- [ ] Pre-commit hooks run successfully (no `--no-verify`)
-- [ ] Working directory clean (no uncommitted changes)
+- [x] Changes committed incrementally (not one giant commit)
+- [x] Commit messages follow TDD pattern: "test: add X", "feat: implement X"
+- [x] Pre-commit hooks run successfully (no `--no-verify`)
+- [x] Working directory clean (no uncommitted changes)
 
 ---
 
