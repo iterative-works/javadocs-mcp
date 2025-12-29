@@ -206,3 +206,96 @@ A  src/test/scala/javadocsmcp/integration/EndToEndTest.scala
 ```
 
 ---
+
+## Phase 2: Fetch source code for Java class (2025-12-29)
+
+**What was built:**
+
+- **Domain Layer:**
+  - `SourceCode.scala` - Entity representing Java source code with metadata
+  - `ClassName.scala` - Added `toSourcePath()` method for `.java` file paths
+  - `Errors.scala` - Added `SourcesNotAvailable` error type
+
+- **Application Layer:**
+  - `SourceCodeService.scala` - Orchestrates source code fetching from coordinates
+
+- **Infrastructure Layer:**
+  - `CoursierArtifactRepository.scala` - Added `fetchSourcesJar()` using `Classifier("sources")`
+  - Renamed `DocumentationReader` → `JarContentReader` (generic naming)
+
+- **Presentation Layer:**
+  - `ToolDefinitions.scala` - Added `get_source` tool with `GetSourceInput` schema
+  - `McpServer.scala` - Wired `SourceCodeService`, registered both tools
+  - `Main.scala` - Updated dependency injection for new service
+
+**Decisions made:**
+
+- Renamed `DocumentationReader` → `JarContentReader` for clarity (works with any JAR content)
+- Extended existing `ArtifactRepository` port rather than creating new one
+- `SourceCodeService` mirrors `DocumentationService` structure for consistency
+- New `SourcesNotAvailable` error provides helpful message suggesting `get_documentation`
+
+**Patterns applied:**
+
+- **Port Extension:** Added `fetchSourcesJar()` to existing `ArtifactRepository` port
+- **Parallel Service Structure:** `SourceCodeService` mirrors `DocumentationService`
+- **Code Reuse:** `JarFileReader` works unchanged for both HTML and Java files
+
+**Testing:**
+
+- Unit tests: 8 new tests (5 SourceCodeService + 3 ClassName toSourcePath)
+- Integration tests: 3 new tests (real Maven Central with slf4j, guava)
+- E2E tests: 3 new tests (get_source happy path + error cases)
+- Total: 14 new tests, all passing
+
+**Code review:**
+
+- Iterations: 1
+- Review file: review-phase-02-20251229.md
+- Result: PASSED - 0 critical issues, 6 warnings, 11 suggestions
+- Key feedback: DRY opportunity in ClassName path methods, missing scalafmt config
+- Positive: Clean hexagonal architecture, proper FCIS compliance
+
+**For next phases:**
+
+- Available utilities:
+  - `CoursierArtifactRepository.fetchSourcesJar()` - ready for Scala artifacts
+  - `ClassName.toSourcePath()` - reusable for Scala (`.scala` extension)
+  - `SourceCodeService` pattern - template for future tools
+- Extension points:
+  - Phase 3: Add Scala coordinate handling (`::` separator)
+  - Phase 4: Add `.scala` extension support to `ClassName`
+  - Phase 7: Add caching layer around both services
+- Notes:
+  - Scala coordinates (`::`) not yet supported - Phase 3
+  - Inner class handling works identically for sources
+
+**Files changed:**
+
+```
+M  src/main/scala/javadocsmcp/Main.scala
+M  src/main/scala/javadocsmcp/application/DocumentationService.scala
+A  src/main/scala/javadocsmcp/application/SourceCodeService.scala
+M  src/main/scala/javadocsmcp/domain/ClassName.scala
+M  src/main/scala/javadocsmcp/domain/Errors.scala
+A  src/main/scala/javadocsmcp/domain/SourceCode.scala
+M  src/main/scala/javadocsmcp/domain/ports/ArtifactRepository.scala
+D  src/main/scala/javadocsmcp/domain/ports/DocumentationReader.scala
+A  src/main/scala/javadocsmcp/domain/ports/JarContentReader.scala
+M  src/main/scala/javadocsmcp/infrastructure/CoursierArtifactRepository.scala
+M  src/main/scala/javadocsmcp/infrastructure/JarFileReader.scala
+M  src/main/scala/javadocsmcp/presentation/McpServer.scala
+M  src/main/scala/javadocsmcp/presentation/ToolDefinitions.scala
+M  src/test/scala/javadocsmcp/application/DocumentationServiceTest.scala
+A  src/test/scala/javadocsmcp/application/SourceCodeServiceIntegrationTest.scala
+A  src/test/scala/javadocsmcp/application/SourceCodeServiceTest.scala
+M  src/test/scala/javadocsmcp/domain/ClassNameTest.scala
+M  src/test/scala/javadocsmcp/infrastructure/CoursierArtifactRepositoryTest.scala
+M  src/test/scala/javadocsmcp/infrastructure/JarFileReaderTest.scala
+M  src/test/scala/javadocsmcp/integration/EndToEndTest.scala
+M  src/test/scala/javadocsmcp/testkit/InMemoryArtifactRepository.scala
+D  src/test/scala/javadocsmcp/testkit/InMemoryDocumentationReader.scala
+A  src/test/scala/javadocsmcp/testkit/InMemoryJarContentReader.scala
+```
+
+---
