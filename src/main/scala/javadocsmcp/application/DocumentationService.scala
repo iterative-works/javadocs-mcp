@@ -4,11 +4,11 @@
 package javadocsmcp.application
 
 import javadocsmcp.domain.{ArtifactCoordinates, ClassName, Documentation, DocumentationError}
-import javadocsmcp.domain.ports.{ArtifactRepository, DocumentationReader}
+import javadocsmcp.domain.ports.{ArtifactRepository, JarContentReader}
 
 class DocumentationService(
   repository: ArtifactRepository,
-  reader: DocumentationReader
+  reader: JarContentReader
 ):
   def getDocumentation(coordinatesStr: String, classNameStr: String): Either[DocumentationError, Documentation] = {
     for {
@@ -20,5 +20,5 @@ class DocumentationService(
   }
 
 object DocumentationService:
-  def apply(repository: ArtifactRepository, reader: DocumentationReader): DocumentationService =
+  def apply(repository: ArtifactRepository, reader: JarContentReader): DocumentationService =
     new DocumentationService(repository, reader)

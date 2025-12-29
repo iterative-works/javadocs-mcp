@@ -4,7 +4,7 @@
 package javadocsmcp.application
 
 import javadocsmcp.domain.{ArtifactCoordinates, DocumentationError}
-import javadocsmcp.testkit.{InMemoryArtifactRepository, InMemoryDocumentationReader}
+import javadocsmcp.testkit.{InMemoryArtifactRepository, InMemoryJarContentReader}
 import java.io.File
 
 class DocumentationServiceTest extends munit.FunSuite:
@@ -19,7 +19,7 @@ class DocumentationServiceTest extends munit.FunSuite:
     val html = testHtmlContent
     val coords = slf4jCoords
     val repository = InMemoryArtifactRepository.withArtifact(coords, jar)
-    val reader = InMemoryDocumentationReader.withEntries(
+    val reader = InMemoryJarContentReader.withEntries(
       (jar, "org/slf4j/Logger.html") -> html
     )
     val service = DocumentationService(repository, reader)
@@ -39,7 +39,7 @@ class DocumentationServiceTest extends munit.FunSuite:
     val html = testHtmlContent
     val coords = slf4jCoords
     val repository = InMemoryArtifactRepository.withArtifact(coords, jar)
-    val reader = InMemoryDocumentationReader.withEntries(
+    val reader = InMemoryJarContentReader.withEntries(
       (jar, "org/slf4j/Logger.html") -> html
     )
     val service = DocumentationService(repository, reader)
@@ -52,7 +52,7 @@ class DocumentationServiceTest extends munit.FunSuite:
 
   test("return error for non-existent artifact"):
     val repository = InMemoryArtifactRepository.empty
-    val reader = InMemoryDocumentationReader.empty
+    val reader = InMemoryJarContentReader.empty
     val service = DocumentationService(repository, reader)
 
     val result = service.getDocumentation("com.fake:nonexistent:1.0.0", "com.fake.Class")
@@ -66,7 +66,7 @@ class DocumentationServiceTest extends munit.FunSuite:
     val jar = testJar
     val coords = slf4jCoords
     val repository = InMemoryArtifactRepository.withArtifact(coords, jar)
-    val reader = InMemoryDocumentationReader.empty
+    val reader = InMemoryJarContentReader.empty
     val service = DocumentationService(repository, reader)
 
     val result = service.getDocumentation("org.slf4j:slf4j-api:2.0.9", "org.slf4j.NonExistent")
@@ -78,7 +78,7 @@ class DocumentationServiceTest extends munit.FunSuite:
 
   test("return error for invalid coordinates format"):
     val repository = InMemoryArtifactRepository.empty
-    val reader = InMemoryDocumentationReader.empty
+    val reader = InMemoryJarContentReader.empty
     val service = DocumentationService(repository, reader)
 
     val result = service.getDocumentation("invalid", "org.slf4j.Logger")

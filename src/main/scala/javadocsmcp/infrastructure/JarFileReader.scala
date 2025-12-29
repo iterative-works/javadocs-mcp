@@ -4,14 +4,14 @@
 package javadocsmcp.infrastructure
 
 import javadocsmcp.domain.DocumentationError
-import javadocsmcp.domain.ports.DocumentationReader
+import javadocsmcp.domain.ports.JarContentReader
 import DocumentationError.*
 import java.io.File
 import java.util.jar.JarFile
 import scala.io.Source
 import scala.util.{Success, Failure, Using}
 
-class JarFileReader extends DocumentationReader:
+class JarFileReader extends JarContentReader:
   def readEntry(jarFile: File, htmlPath: String): Either[DocumentationError, String] = {
     Using(new JarFile(jarFile)) { jar =>
       Option(jar.getEntry(htmlPath)) match {

@@ -4,7 +4,7 @@
 package javadocsmcp.presentation
 
 import chimp.*
-import javadocsmcp.application.DocumentationService
+import javadocsmcp.application.{DocumentationService, SourceCodeService}
 import sttp.tapir.server.netty.sync.NettySyncServer
 
 object McpServer {
@@ -14,9 +14,14 @@ object McpServer {
   }
 
   /** Start server asynchronously in background thread and return a handle for stopping it */
-  def startAsync(service: DocumentationService, port: Int): ServerHandle = {
-    val getDocTool = ToolDefinitions.getDocumentationTool(service)
-    val mcpEndpoint = chimp.mcpEndpoint(List(getDocTool), List("mcp"))
+  def startAsync(
+    documentationService: DocumentationService,
+    sourceCodeService: SourceCodeService,
+    port: Int
+  ): ServerHandle = {
+    val getDocTool = ToolDefinitions.getDocumentationTool(documentationService)
+    val getSourceTool = ToolDefinitions.getSourceTool(sourceCodeService)
+    val mcpEndpoint = chimp.mcpEndpoint(List(getDocTool, getSourceTool), List("mcp"))
 
     val thread = new Thread(() => {
       try {
@@ -37,9 +42,14 @@ object McpServer {
   }
 
   /** Start server and block until shutdown (for Main.scala) */
-  def start(service: DocumentationService, port: Int): Unit = {
-    val getDocTool = ToolDefinitions.getDocumentationTool(service)
-    val mcpEndpoint = chimp.mcpEndpoint(List(getDocTool), List("mcp"))
+  def start(
+    documentationService: DocumentationService,
+    sourceCodeService: SourceCodeService,
+    port: Int
+  ): Unit = {
+    val getDocTool = ToolDefinitions.getDocumentationTool(documentationService)
+    val getSourceTool = ToolDefinitions.getSourceTool(sourceCodeService)
+    val mcpEndpoint = chimp.mcpEndpoint(List(getDocTool, getSourceTool), List("mcp"))
 
     println(s"Starting MCP server on port $port")
     NettySyncServer()
