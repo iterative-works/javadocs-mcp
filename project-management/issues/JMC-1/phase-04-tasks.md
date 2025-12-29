@@ -38,7 +38,7 @@
 
 ## Refactoring
 
-- [ ] [impl] [ ] [reviewed] Refactoring R1: TASTy-based Scala source lookup
+- [x] [impl] [x] [reviewed] Refactoring R1: TASTy-based Scala source lookup
 
 ---
 

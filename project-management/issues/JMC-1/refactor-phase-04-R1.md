@@ -2,7 +2,7 @@
 
 **Phase:** 4
 **Created:** 2025-12-29
-**Status:** Planned
+**Status:** Complete
 
 ## Decision Summary
 
@@ -67,40 +67,40 @@ else
 
 ### Tests First (TDD)
 
-- [ ] [test] Add unit test: `TastySourceResolver` returns correct path for known class
-- [ ] [test] Add unit test: `TastySourceResolver` extracts package-relative path from project-relative
-- [ ] [test] Add unit test: `TastySourceResolver` returns error for non-existent class
-- [ ] [test] Add integration test: Resolve source path for `cats.effect.IO` from real JAR
-- [ ] [test] Add integration test: Resolve source path for `zio.ZIO` from real JAR
+- [x] [test] Add unit test: `TastySourceResolver` returns correct path for known class
+- [x] [test] Add unit test: `TastySourceResolver` extracts package-relative path from project-relative
+- [x] [test] Add unit test: `TastySourceResolver` returns error for non-existent class
+- [x] [test] Add integration test: Resolve source path for `cats.effect.IO` from real JAR
+- [x] [test] Add integration test: Resolve source path for `zio.ZIO` from real JAR
 
 ### Implementation
 
-- [ ] [impl] Create `SourcePathResolver` port trait in domain/ports
-- [ ] [impl] Implement `TastySourceResolver` in infrastructure layer
-- [ ] [impl] Add `fetchMainJar()` method to `ArtifactRepository` port
-- [ ] [impl] Implement `fetchMainJar()` in `CoursierArtifactRepository`
-- [ ] [impl] Update `SourceCodeService` to use `SourcePathResolver` for Scala artifacts
-- [ ] [impl] Add fallback to filename convention if TASTy lookup fails
+- [x] [impl] Create `SourcePathResolver` port trait in domain/ports
+- [x] [impl] Implement `TastySourceResolver` in infrastructure layer
+- [x] [impl] Add `fetchMainJar()` method to `ArtifactRepository` port
+- [x] [impl] Implement `fetchMainJar()` in `CoursierArtifactRepository`
+- [x] [impl] Update `SourceCodeService` to use `SourcePathResolver` for Scala artifacts
+- [x] [impl] Add fallback to filename convention if TASTy lookup fails
 
 ### Integration
 
-- [ ] [integ] Run all tests and verify no regressions
-- [ ] [integ] Test with cats-effect, zio, and other Scala 3 libraries
+- [x] [integ] Run all tests and verify no regressions
+- [x] [integ] Test with cats-effect, zio, and other Scala 3 libraries
 
 ### Verification
 
-- [ ] [verify] Existing E2E tests still pass
-- [ ] [verify] New TASTy-based lookup works for cats.effect.IO
-- [ ] [verify] Fallback works for Scala 2 artifacts
+- [x] [verify] Existing E2E tests still pass
+- [x] [verify] New TASTy-based lookup works for cats.effect.IO
+- [x] [verify] Fallback works for Scala 2 artifacts
 
 ## Verification Checklist
 
-- [ ] All 95+ existing tests pass
-- [ ] New TastySourceResolver tests pass
-- [ ] TASTy lookup correctly resolves `cats.effect.IO` to `cats/effect/IO.scala`
-- [ ] TASTy lookup correctly resolves classes not named after their file
-- [ ] Fallback to filename convention works when TASTy unavailable
-- [ ] No performance regression (TASTy loading should be fast)
+- [x] All 95+ existing tests pass (104 tests now)
+- [x] New TastySourceResolver tests pass
+- [x] TASTy lookup correctly resolves `cats.effect.IO` to `cats/effect/IO.scala`
+- [x] TASTy lookup correctly resolves classes not named after their file
+- [x] Fallback to filename convention works when TASTy unavailable
+- [x] No performance regression (TASTy loading should be fast)
 
 ## Technical Notes
 
@@ -138,6 +138,23 @@ classSymbol.flatMap(_.tree) match
   case _ =>
     Left(ClassNotFound(...))
 ```
+
+## Implementation Summary
+
+### Files Created
+- `src/main/scala/javadocsmcp/domain/ports/SourcePathResolver.scala` - Port trait
+- `src/main/scala/javadocsmcp/infrastructure/TastySourceResolver.scala` - TASTy-based implementation
+- `src/test/scala/javadocsmcp/infrastructure/TastySourceResolverTest.scala` - Unit tests
+- `src/test/scala/javadocsmcp/infrastructure/TastySourceResolverIntegrationTest.scala` - Integration tests
+- `src/test/scala/javadocsmcp/testkit/InMemorySourcePathResolver.scala` - Test double
+
+### Files Modified
+- `src/main/scala/javadocsmcp/domain/ports/ArtifactRepository.scala` - Added `fetchMainJar()`
+- `src/main/scala/javadocsmcp/infrastructure/CoursierArtifactRepository.scala` - Implemented `fetchMainJar()`
+- `src/main/scala/javadocsmcp/application/SourceCodeService.scala` - Uses SourcePathResolver with fallback
+- `src/main/scala/javadocsmcp/Main.scala` - Wires up TastySourceResolver
+- `src/test/scala/javadocsmcp/testkit/InMemoryArtifactRepository.scala` - Added `fetchMainJar()` support
+- `src/test/scala/javadocsmcp/integration/EndToEndTest.scala` - Uses TastySourceResolver
 
 ## Estimated Effort
 

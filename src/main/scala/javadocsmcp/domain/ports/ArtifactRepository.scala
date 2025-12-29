@@ -9,3 +9,4 @@ import java.io.File
 trait ArtifactRepository:
   def fetchJavadocJar(coords: ArtifactCoordinates, scalaVersion: String = "3"): Either[DocumentationError, File]
   def fetchSourcesJar(coords: ArtifactCoordinates, scalaVersion: String = "3"): Either[DocumentationError, File]
+  def fetchMainJar(coords: ArtifactCoordinates, scalaVersion: String = "3"): Either[DocumentationError, File]
