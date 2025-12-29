@@ -148,3 +148,61 @@ A  src/test/scala/javadocsmcp/application/DocumentationServiceIntegrationTest.sc
 ```
 
 ---
+
+## Phase 1 Completion: E2E Tests and Polish (2025-12-29)
+
+**What was added:**
+
+- **E2E Test Suite:**
+  - `EndToEndTest.scala` - Complete HTTP-level tests for MCP protocol
+  - Server lifecycle management with `ServerHandle` case class
+  - HTTP client integration using sttp
+  - JSON-RPC validation using circe
+
+- **Server Testability:**
+  - `McpServer.startAsync()` - Non-blocking server start returning handle
+  - `ServerHandle.stop()` - Clean server shutdown for tests
+  - Background thread with daemon flag for proper cleanup
+
+**Test Coverage:**
+
+- `tools/list` endpoint - Verifies tool discovery
+- Happy path - Fetches `org.slf4j.Logger` documentation
+- Error case - Non-existent artifact returns `isError: true`
+- Error case - Non-existent class returns `isError: true`
+- Response time assertion - Under 5 seconds
+
+**Dependencies Added:**
+
+- `sttp.client3::core:3.9.0` - HTTP client for E2E tests
+- `io.circe::circe-parser:0.14.6` - JSON parsing for response validation
+
+**Code Review:**
+
+- Iterations: 1
+- Review file: review-phase-01-e2e-20251229.md
+- Result: PASSED - No critical issues
+- Minor warnings: Code duplication in McpServer (acceptable), Thread.sleep in tests (pragmatic)
+
+**Verification:**
+
+- All 25 tests passing
+- 6/6 scenarios verified
+- Response time within requirements
+
+**Final Testing Summary:**
+
+- Unit tests: 9 tests (domain logic)
+- Integration tests: 12 tests (Coursier + JAR reading + service)
+- E2E tests: 4 tests (full HTTP MCP flow)
+- Total: 25 tests
+
+**Files changed:**
+
+```
+M  project.scala
+M  src/main/scala/javadocsmcp/presentation/McpServer.scala
+A  src/test/scala/javadocsmcp/integration/EndToEndTest.scala
+```
+
+---
