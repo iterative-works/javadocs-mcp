@@ -529,3 +529,73 @@ M  src/test/scala/javadocsmcp/integration/EndToEndTest.scala
 ```
 
 ---
+
+## Human Review: Scala Source Lookup Strategy (2025-12-29)
+
+**Reviewer:** Michal
+
+**Context:** Discussed approach for finding Scala source files in sources JARs, given that Scala doesn't enforce file naming conventions like Java does.
+
+**Problem identified:**
+
+Current approach (`className.toScalaSourcePath()` → `cats/effect/IO.scala`) only works by luck when library authors happen to name files after their main class. In Scala, a file `Utils.scala` can contain `class Foo`, `trait Bar`, `object Baz` - there's no compiler-enforced naming convention.
+
+**Decisions made:**
+
+1. **Use TASTy-based source lookup for Scala 3:**
+   - TASTy files contain `sourceFile.path` with the original source file path
+   - Rationale: TASTy is the authoritative source of truth for Scala 3 symbol locations
+
+2. **Upgrade to Scala 3.7.4 (from LTS 3.3.x):**
+   - Required for tasty-query 1.6.1 compatibility
+   - Rationale: tasty-query is the cleanest API for TASTy analysis without requiring full compiler infrastructure
+   - Trade-off accepted: Moving off LTS for this capability
+
+3. **Add tasty-query dependency:**
+   - `ch.epfl.scala::tasty-query:1.6.1`
+   - Provides `Context`, `ClasspathLoaders`, symbol lookup, and source position access
+
+4. **Path mapping algorithm:**
+   - TASTy paths are project-relative (e.g., `core/shared/src/main/scala/cats/effect/IO.scala`)
+   - Sources JAR paths are package-relative (e.g., `cats/effect/IO.scala`)
+   - Extract package-relative suffix by finding where package path starts in TASTy path
+
+**Spike results:**
+
+```
+Class: cats.effect.IO
+  TASTy sourceFile.path: core/shared/src/main/scala/cats/effect/IO.scala
+  Sources JAR path:      cats/effect/IO.scala
+```
+
+**Algorithm:**
+```scala
+def extractPackageRelativePath(tastyPath: String, packageName: String): String =
+  val packagePath = packageName.replace('.', '/') + "/"
+  val idx = tastyPath.indexOf(packagePath)
+  if idx >= 0 then tastyPath.substring(idx)
+  else tastyPath.split('/').last  // fallback to filename
+```
+
+**Impact on stories:**
+
+- Phase 4 (Scala source) implementation approach will change
+- Current `ClassName.toScalaSourcePath()` approach remains as fallback
+- New `TastySourceResolver` component needed for TASTy-based lookup
+
+**Action items:**
+
+- [x] Upgrade Scala to 3.7.4
+- [x] Add tasty-query dependency
+- [ ] Implement `TastySourceResolver` in infrastructure layer
+- [ ] Update `SourceCodeService` to use TASTy-based lookup for Scala artifacts
+- [ ] Add tests for TASTy-based source resolution
+
+**Files changed:**
+
+```
+M  project.scala (Scala 3.3 → 3.7.4, added tasty-query)
+M  src/main/scala/javadocsmcp/presentation/McpServer.scala (fixed unused import)
+```
+
+---

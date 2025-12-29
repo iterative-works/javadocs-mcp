@@ -3,7 +3,7 @@
 
 package javadocsmcp.presentation
 
-import chimp.*
+import chimp.mcpEndpoint
 import javadocsmcp.application.{DocumentationService, SourceCodeService}
 import sttp.tapir.server.netty.sync.NettySyncServer
 
@@ -21,14 +21,14 @@ object McpServer {
   ): ServerHandle = {
     val getDocTool = ToolDefinitions.getDocumentationTool(documentationService)
     val getSourceTool = ToolDefinitions.getSourceTool(sourceCodeService)
-    val mcpEndpoint = chimp.mcpEndpoint(List(getDocTool, getSourceTool), List("mcp"))
+    val endpoint = mcpEndpoint(List(getDocTool, getSourceTool), List("mcp"))
 
     val thread = new Thread(() => {
       try {
         println(s"Starting MCP server on port $port")
         NettySyncServer()
           .port(port)
-          .addEndpoint(mcpEndpoint)
+          .addEndpoint(endpoint)
           .startAndWait()
       } catch {
         case _: InterruptedException => // Expected during shutdown
@@ -49,12 +49,12 @@ object McpServer {
   ): Unit = {
     val getDocTool = ToolDefinitions.getDocumentationTool(documentationService)
     val getSourceTool = ToolDefinitions.getSourceTool(sourceCodeService)
-    val mcpEndpoint = chimp.mcpEndpoint(List(getDocTool, getSourceTool), List("mcp"))
+    val endpoint = mcpEndpoint(List(getDocTool, getSourceTool), List("mcp"))
 
     println(s"Starting MCP server on port $port")
     NettySyncServer()
       .port(port)
-      .addEndpoint(mcpEndpoint)
+      .addEndpoint(endpoint)
       .startAndWait()
   }
 }
