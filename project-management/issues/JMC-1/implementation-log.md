@@ -529,3 +529,145 @@ M  src/test/scala/javadocsmcp/integration/EndToEndTest.scala
 ```
 
 ---
+
+## Human Review: Scala Source Lookup Strategy (2025-12-29)
+
+**Reviewer:** Michal
+
+**Context:** Discussed approach for finding Scala source files in sources JARs, given that Scala doesn't enforce file naming conventions like Java does.
+
+**Problem identified:**
+
+Current approach (`className.toScalaSourcePath()` → `cats/effect/IO.scala`) only works by luck when library authors happen to name files after their main class. In Scala, a file `Utils.scala` can contain `class Foo`, `trait Bar`, `object Baz` - there's no compiler-enforced naming convention.
+
+**Decisions made:**
+
+1. **Use TASTy-based source lookup for Scala 3:**
+   - TASTy files contain `sourceFile.path` with the original source file path
+   - Rationale: TASTy is the authoritative source of truth for Scala 3 symbol locations
+
+2. **Upgrade to Scala 3.7.4 (from LTS 3.3.x):**
+   - Required for tasty-query 1.6.1 compatibility
+   - Rationale: tasty-query is the cleanest API for TASTy analysis without requiring full compiler infrastructure
+   - Trade-off accepted: Moving off LTS for this capability
+
+3. **Add tasty-query dependency:**
+   - `ch.epfl.scala::tasty-query:1.6.1`
+   - Provides `Context`, `ClasspathLoaders`, symbol lookup, and source position access
+
+4. **Path mapping algorithm:**
+   - TASTy paths are project-relative (e.g., `core/shared/src/main/scala/cats/effect/IO.scala`)
+   - Sources JAR paths are package-relative (e.g., `cats/effect/IO.scala`)
+   - Extract package-relative suffix by finding where package path starts in TASTy path
+
+**Spike results:**
+
+```
+Class: cats.effect.IO
+  TASTy sourceFile.path: core/shared/src/main/scala/cats/effect/IO.scala
+  Sources JAR path:      cats/effect/IO.scala
+```
+
+**Algorithm:**
+```scala
+def extractPackageRelativePath(tastyPath: String, packageName: String): String =
+  val packagePath = packageName.replace('.', '/') + "/"
+  val idx = tastyPath.indexOf(packagePath)
+  if idx >= 0 then tastyPath.substring(idx)
+  else tastyPath.split('/').last  // fallback to filename
+```
+
+**Impact on stories:**
+
+- Phase 4 (Scala source) implementation approach will change
+- Current `ClassName.toScalaSourcePath()` approach remains as fallback
+- New `TastySourceResolver` component needed for TASTy-based lookup
+
+**Action items:**
+
+- [x] Upgrade Scala to 3.7.4
+- [x] Add tasty-query dependency
+- [ ] Implement `TastySourceResolver` in infrastructure layer
+- [ ] Update `SourceCodeService` to use TASTy-based lookup for Scala artifacts
+- [ ] Add tests for TASTy-based source resolution
+
+**Files changed:**
+
+```
+M  project.scala (Scala 3.3 → 3.7.4, added tasty-query)
+M  src/main/scala/javadocsmcp/presentation/McpServer.scala (fixed unused import)
+```
+
+---
+
+## Phase 5: Handle missing artifacts gracefully (2025-12-29)
+
+**What was built:**
+
+- **Domain Layer:**
+  - `Errors.scala` - Added `JavadocNotAvailable` error type for classifier-specific errors
+  - Enhanced all error messages with multi-line, user-friendly format:
+    - `ArtifactNotFound`: Maven Central URL, spelling suggestions, version check hints
+    - `JavadocNotAvailable`: Suggests `get_source` as alternative
+    - `SourcesNotAvailable`: Suggests `get_documentation` as alternative
+    - `ClassNotFound`: Capitalization hints, dependency verification
+    - `InvalidCoordinates`: Java (`:`) and Scala (`::`) format examples
+    - `InvalidClassName`: Fully qualified format example
+
+- **Infrastructure Layer:**
+  - `CoursierArtifactRepository.scala` - Improved error detection:
+    - `coursier.error.ResolutionError` → `ArtifactNotFound` (artifact doesn't exist)
+    - Other exceptions → Classifier-specific error (`JavadocNotAvailable`, `SourcesNotAvailable`)
+  - Updated `fetchJavadocJar()` to return `JavadocNotAvailable` instead of `ArtifactNotFound`
+
+**Decisions made:**
+
+- Multi-line error messages with `.stripMargin` for readability
+- Distinguish error types to give actionable guidance (suggest alternative tool)
+- Preserve existing behavior - errors still propagate via `Either[DocumentationError, T]`
+- Research identified Coursier exception types: `ResolutionError` vs `FetchError`
+
+**Patterns applied:**
+
+- **Enhanced Value Messaging:** Each error case provides specific, actionable guidance
+- **Exception Type Mapping:** Infrastructure translates external exceptions to domain errors
+- **Functional Error Handling:** `Either` monads propagate errors through layers
+
+**Testing:**
+
+- Unit tests: 16 new tests (error message content verification)
+- Integration tests: 5 new tests (Coursier error type mapping)
+- E2E tests: 3 new tests (MCP error responses, server stability)
+- Total: 24 new tests, all passing
+
+**Code review:**
+
+- Iterations: 1
+- Review file: review-phase-05-20251229.md
+- Result: PASSED - 0 critical issues, 3 warnings, 7 suggestions
+- Warnings: Wildcard import (style), test name accuracy, test gap documentation
+- Positive: Exemplary Scala 3 enum usage, clear error messages
+
+**For next phases:**
+
+- Available utilities:
+  - Enhanced error messages provide debugging guidance
+  - Error type distinction enables targeted recovery suggestions
+- Extension points:
+  - Phase 6: Class-level error handling with suggestions
+  - Phase 7: Cache error responses (shorter TTL than successes)
+- Notes:
+  - Can't easily test `JavadocNotAvailable` path (most artifacts publish javadoc)
+  - Server remains stable after error responses (verified by E2E tests)
+
+**Files changed:**
+
+```
+M  src/main/scala/javadocsmcp/domain/Errors.scala
+M  src/main/scala/javadocsmcp/infrastructure/CoursierArtifactRepository.scala
+A  src/test/scala/javadocsmcp/domain/ErrorsTest.scala
+M  src/test/scala/javadocsmcp/infrastructure/CoursierArtifactRepositoryTest.scala
+M  src/test/scala/javadocsmcp/integration/EndToEndTest.scala
+```
+
+---

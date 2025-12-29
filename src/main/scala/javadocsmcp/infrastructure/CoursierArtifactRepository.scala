@@ -59,10 +59,21 @@ class CoursierArtifactRepository extends ArtifactRepository:
       files.head
     } match
       case Success(file) => Right(file)
-      case Failure(_) => Left(errorConstructor(s"$org:$name:$ver"))
+      case Failure(ex) =>
+        val coordsStr = s"$org:$name:$ver"
+        // Distinguish between artifact not found vs classifier not found
+        // coursier.error.ResolutionError: Artifact doesn't exist in repository
+        // coursier.error.FetchError: Artifact exists but specific file/classifier not found
+        ex match
+          case _: coursier.error.ResolutionError =>
+            // Artifact doesn't exist at all
+            Left(DocumentationError.ArtifactNotFound(coordsStr))
+          case _ =>
+            // Classifier not found or other error - use the specific error constructor
+            Left(errorConstructor(coordsStr))
 
   def fetchJavadocJar(coords: ArtifactCoordinates, scalaVersion: String = "3"): Either[DocumentationError, File] =
-    fetchJar(coords, scalaVersion, Classifier("javadoc"), ArtifactNotFound.apply)
+    fetchJar(coords, scalaVersion, Classifier("javadoc"), JavadocNotAvailable.apply)
 
   def fetchSourcesJar(coords: ArtifactCoordinates, scalaVersion: String = "3"): Either[DocumentationError, File] =
     fetchJar(coords, scalaVersion, Classifier("sources"), SourcesNotAvailable.apply)
