@@ -2,21 +2,21 @@
 
 **Issue:** JMC-1
 **Created:** 2025-12-28
-**Status:** 3/7 phases complete (43%)
+**Status:** 4/7 phases complete (57%)
 
 ## Phase Index
 
 - [x] Phase 1: Fetch Javadoc HTML for Java class (Est: 4-6h) → `phase-01-context.md`
 - [x] Phase 2: Fetch source code for Java class (Est: 3-4h) → `phase-02-context.md`
 - [x] Phase 3: Fetch Scaladoc HTML for Scala class (Est: 2-3h) → `phase-03-context.md`
-- [ ] Phase 4: Fetch source code for Scala class (Est: 1-2h) → `phase-04-context.md`
+- [x] Phase 4: Fetch source code for Scala class (Est: 1-2h) → `phase-04-context.md`
 - [ ] Phase 5: Handle missing artifacts gracefully (Est: 2-3h) → `phase-05-context.md`
 - [ ] Phase 6: Handle missing classes within artifacts (Est: 2-3h) → `phase-06-context.md`
 - [ ] Phase 7: In-memory caching for repeated lookups (Est: 4-6h) → `phase-07-context.md`
 
 ## Progress Tracker
 
-**Completed:** 3/7 phases
+**Completed:** 4/7 phases
 **Estimated Total:** 18-27 hours
 **Time Spent:** 0 hours
 

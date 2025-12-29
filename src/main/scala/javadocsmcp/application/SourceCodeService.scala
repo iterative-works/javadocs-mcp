@@ -20,7 +20,13 @@ class SourceCodeService(
       coords <- ArtifactCoordinates.parse(coordinatesStr)
       className <- ClassName.parse(classNameStr)
       sourcesJar <- repository.fetchSourcesJar(coords, effectiveScalaVersion)
-      sourceText <- reader.readEntry(sourcesJar, className.toSourcePath)
+      sourceText <- if coords.scalaArtifact then
+        // Try .scala first, fall back to .java for mixed-source projects
+        reader.readEntry(sourcesJar, className.toScalaSourcePath)
+          .orElse(reader.readEntry(sourcesJar, className.toSourcePath))
+      else
+        // Java artifacts only have .java files
+        reader.readEntry(sourcesJar, className.toSourcePath)
     } yield SourceCode(sourceText, className, coords)
   }
 

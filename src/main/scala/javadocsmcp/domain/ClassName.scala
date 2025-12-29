@@ -6,23 +6,20 @@ package javadocsmcp.domain
 import DocumentationError.*
 
 case class ClassName(fullyQualifiedName: String) {
-  def toHtmlPath: String = {
+  private def toPath(extension: String): String = {
     // Strip inner class suffix (e.g., Logger$Factory -> Logger)
     val outerClass = fullyQualifiedName.split('$').head
     // Convert package separators to path separators
     val path = outerClass.replace('.', '/')
-    // Add HTML extension
-    s"$path.html"
+    // Add extension
+    s"$path$extension"
   }
 
-  def toSourcePath: String = {
-    // Strip inner class suffix (e.g., Logger$Factory -> Logger)
-    val outerClass = fullyQualifiedName.split('$').head
-    // Convert package separators to path separators
-    val path = outerClass.replace('.', '/')
-    // Add Java source extension
-    s"$path.java"
-  }
+  def toHtmlPath: String = toPath(".html")
+
+  def toSourcePath: String = toPath(".java")
+
+  def toScalaSourcePath: String = toPath(".scala")
 }
 
 object ClassName {
