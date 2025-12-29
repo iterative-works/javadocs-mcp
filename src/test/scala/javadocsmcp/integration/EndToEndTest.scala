@@ -226,3 +226,128 @@ class EndToEndTest extends munit.FunSuite:
     assert(errorMessage.toLowerCase.contains("class") || errorMessage.toLowerCase.contains("not found"),
       s"Expected 'class not found' message, got: $errorMessage")
   }
+
+  // Scala version parameter tests
+
+  test("should fetch Scaladoc for cats.effect.IO with default scalaVersion") {
+    val params = Json.obj(
+      "name" -> Json.fromString("get_documentation"),
+      "arguments" -> Json.obj(
+        "coordinates" -> Json.fromString("org.typelevel::cats-effect:3.5.4"),
+        "className" -> Json.fromString("cats.effect.IO")
+      )
+    )
+
+    val startTime = System.currentTimeMillis()
+    val response = makeRequest("tools/call", params)
+    val endTime = System.currentTimeMillis()
+
+    val result = response.hcursor.downField("result")
+    val content = result.downField("content").as[List[Json]]
+
+    assert(content.isRight, s"Expected content array in response: $response")
+
+    val textContent = content.getOrElse(List.empty)
+      .flatMap(_.hcursor.downField("text").as[String].toOption)
+      .headOption
+
+    assert(textContent.isDefined, "Expected text content in response")
+    val html = textContent.get
+    assert(html.contains("IO"), s"Expected 'IO' in HTML content")
+
+    val responseTime = endTime - startTime
+    assert(responseTime < 10000, s"Response time $responseTime ms exceeded 10 seconds")
+  }
+
+  test("should fetch Scala 2.13 artifact with explicit scalaVersion parameter") {
+    val params = Json.obj(
+      "name" -> Json.fromString("get_documentation"),
+      "arguments" -> Json.obj(
+        "coordinates" -> Json.fromString("org.typelevel::cats-effect:3.5.4"),
+        "className" -> Json.fromString("cats.effect.IO"),
+        "scalaVersion" -> Json.fromString("2.13")
+      )
+    )
+
+    val response = makeRequest("tools/call", params)
+
+    val result = response.hcursor.downField("result")
+    val content = result.downField("content").as[List[Json]]
+
+    assert(content.isRight, s"Expected content array in response: $response")
+
+    val textContent = content.getOrElse(List.empty)
+      .flatMap(_.hcursor.downField("text").as[String].toOption)
+      .headOption
+
+    assert(textContent.isDefined, "Expected text content in response")
+    val html = textContent.get
+    assert(html.contains("IO"), s"Expected 'IO' in HTML content for Scala 2.13 version")
+  }
+
+  test("should fetch explicit suffix coordinate without scalaVersion parameter") {
+    val params = Json.obj(
+      "name" -> Json.fromString("get_documentation"),
+      "arguments" -> Json.obj(
+        "coordinates" -> Json.fromString("org.typelevel:cats-effect_2.13:3.5.4"),
+        "className" -> Json.fromString("cats.effect.IO")
+      )
+    )
+
+    val response = makeRequest("tools/call", params)
+
+    val result = response.hcursor.downField("result")
+    val content = result.downField("content").as[List[Json]]
+
+    assert(content.isRight, s"Expected content array in response: $response")
+
+    val textContent = content.getOrElse(List.empty)
+      .flatMap(_.hcursor.downField("text").as[String].toOption)
+      .headOption
+
+    assert(textContent.isDefined, "Expected text content in response")
+    val html = textContent.get
+    assert(html.contains("IO"), s"Expected 'IO' in HTML content for explicit _2.13 suffix")
+  }
+
+  test("should return error for non-existent Scala artifact") {
+    val params = Json.obj(
+      "name" -> Json.fromString("get_documentation"),
+      "arguments" -> Json.obj(
+        "coordinates" -> Json.fromString("com.fake::nonexistent:1.0.0"),
+        "className" -> Json.fromString("com.fake.FakeClass")
+      )
+    )
+
+    val response = makeRequest("tools/call", params)
+
+    val hasError = response.hcursor.downField("result").downField("isError").as[Boolean].getOrElse(false) ||
+                   response.hcursor.downField("error").succeeded
+
+    assert(hasError, s"Expected error response for non-existent Scala artifact: $response")
+  }
+
+  test("should return error for non-existent class in Scala artifact") {
+    val params = Json.obj(
+      "name" -> Json.fromString("get_documentation"),
+      "arguments" -> Json.obj(
+        "coordinates" -> Json.fromString("org.typelevel::cats-effect:3.5.4"),
+        "className" -> Json.fromString("cats.effect.NonExistentClass")
+      )
+    )
+
+    val response = makeRequest("tools/call", params)
+
+    val hasError = response.hcursor.downField("result").downField("isError").as[Boolean].getOrElse(false) ||
+                   response.hcursor.downField("error").succeeded
+
+    assert(hasError, s"Expected error response for non-existent class in Scala artifact: $response")
+
+    val errorMessage = response.hcursor.downField("result").downField("content")
+      .downArray.downField("text").as[String]
+      .orElse(response.hcursor.downField("error").downField("message").as[String])
+      .getOrElse("")
+
+    assert(errorMessage.toLowerCase.contains("class") || errorMessage.toLowerCase.contains("not found"),
+      s"Expected 'class not found' message, got: $errorMessage")
+  }

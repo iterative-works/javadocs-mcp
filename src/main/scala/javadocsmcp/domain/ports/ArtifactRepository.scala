@@ -7,5 +7,5 @@ import javadocsmcp.domain.{ArtifactCoordinates, DocumentationError}
 import java.io.File
 
 trait ArtifactRepository:
-  def fetchJavadocJar(coords: ArtifactCoordinates): Either[DocumentationError, File]
-  def fetchSourcesJar(coords: ArtifactCoordinates): Either[DocumentationError, File]
+  def fetchJavadocJar(coords: ArtifactCoordinates, scalaVersion: String = "3"): Either[DocumentationError, File]
+  def fetchSourcesJar(coords: ArtifactCoordinates, scalaVersion: String = "3"): Either[DocumentationError, File]

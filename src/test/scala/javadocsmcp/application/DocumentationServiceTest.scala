@@ -87,3 +87,45 @@ class DocumentationServiceTest extends munit.FunSuite:
     result.left.foreach { error =>
       assert(error.isInstanceOf[DocumentationError.InvalidCoordinates])
     }
+
+  test("pass scalaVersion parameter to repository"):
+    val jar = testJar
+    val html = testHtmlContent
+    val coords = ArtifactCoordinates("org.typelevel", "cats-effect", "3.5.4", scalaArtifact = true)
+    val repository = new InMemoryArtifactRepository(javadocArtifacts = Map(coords -> jar))
+    val reader = InMemoryJarContentReader.withEntries(
+      (jar, "cats/effect/IO.html") -> html
+    )
+    val service = DocumentationService(repository, reader)
+
+    service.getDocumentation("org.typelevel::cats-effect:3.5.4", "cats.effect.IO", Some("2.13"))
+
+    assertEquals(repository.lastJavadocScalaVersion, Some("2.13"))
+
+  test("use default scalaVersion=3 when not specified"):
+    val jar = testJar
+    val html = testHtmlContent
+    val coords = ArtifactCoordinates("org.typelevel", "cats-effect", "3.5.4", scalaArtifact = true)
+    val repository = new InMemoryArtifactRepository(javadocArtifacts = Map(coords -> jar))
+    val reader = InMemoryJarContentReader.withEntries(
+      (jar, "cats/effect/IO.html") -> html
+    )
+    val service = DocumentationService(repository, reader)
+
+    service.getDocumentation("org.typelevel::cats-effect:3.5.4", "cats.effect.IO")
+
+    assertEquals(repository.lastJavadocScalaVersion, Some("3"))
+
+  test("use default scalaVersion=3 when None is explicitly passed"):
+    val jar = testJar
+    val html = testHtmlContent
+    val coords = ArtifactCoordinates("org.typelevel", "cats-effect", "3.5.4", scalaArtifact = true)
+    val repository = new InMemoryArtifactRepository(javadocArtifacts = Map(coords -> jar))
+    val reader = InMemoryJarContentReader.withEntries(
+      (jar, "cats/effect/IO.html") -> html
+    )
+    val service = DocumentationService(repository, reader)
+
+    service.getDocumentation("org.typelevel::cats-effect:3.5.4", "cats.effect.IO", None)
+
+    assertEquals(repository.lastJavadocScalaVersion, Some("3"))

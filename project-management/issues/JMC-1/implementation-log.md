@@ -299,3 +299,164 @@ A  src/test/scala/javadocsmcp/testkit/InMemoryJarContentReader.scala
 ```
 
 ---
+
+## Phase 3: Fetch Scaladoc HTML for Scala class (2025-12-29)
+
+**What was built:**
+
+- **Domain Layer:**
+  - `ArtifactCoordinates.scala` - Added `scalaArtifact: Boolean` field and `::` separator parsing
+  - Added `parseScalaCoordinates()` private method for Scala coordinate handling
+
+- **Infrastructure Layer:**
+  - `CoursierArtifactRepository.scala` - Added `resolveArtifactName()` for Scala `_3` suffix
+  - Refactored `fetchJavadocJar()` and `fetchSourcesJar()` to use common `fetchJar()` method
+  - Added comment documenting Scala 3 assumption
+
+- **Presentation Layer:**
+  - `ToolDefinitions.scala` - Updated descriptions with Scala examples
+
+**Decisions made:**
+
+- Use `::` separator to detect Scala coordinates (e.g., `org.typelevel::cats-effect:3.5.4`)
+- Append `_3` suffix for Scala 3 artifacts (Scala 2.x support deferred to future phase)
+- Scaladoc uses same `-javadoc` classifier as Javadoc (no classifier change needed)
+- No changes to `DocumentationService` - transparent support via parsing layer
+
+**Patterns applied:**
+
+- **DRY Refactoring:** Extracted `resolveArtifactName()` and `fetchJar()` common methods
+- **Transparent Extension:** Service layer unchanged, coordinate parsing handles Java/Scala difference
+- **Domain-Driven Parsing:** Coordinate type detected and tracked in domain model
+
+**Coursier Research Findings:**
+
+- Coursier does NOT automatically handle `::` syntax in `Dependency.parse()`
+- Must manually append Scala version suffix (`_3`, `_2.13`, etc.) to artifact ID
+- Module construction uses `ModuleName(artifactId_3)` for Scala artifacts
+
+**Testing:**
+
+- Unit tests: 5 new tests (Scala coordinate parsing and regression)
+- Integration tests: 4 new tests (cats-effect and ZIO Scaladoc fetching)
+- E2E tests: 3 new tests (Scala documentation via HTTP)
+- All 46 tests passing
+
+**Code review:**
+
+- Iterations: 1 (+ 1 fix iteration)
+- Review file: review-phase-03-20251229.md
+- Result: PASSED after fixing DRY violation
+- Fixed: Extracted `resolveArtifactName()` and `fetchJar()` methods
+- Deferred: Scala 2.x support (per MVP scope), boolean→enum refactor
+
+**For next phases:**
+
+- Available utilities:
+  - `ArtifactCoordinates.parse()` handles both `:` and `::`
+  - `resolveArtifactName()` applies Scala version suffix
+  - `fetchJar()` generalized for any classifier
+- Extension points:
+  - Phase 4: Add `.scala` extension support to `ClassName.toSourcePath()`
+  - Future: Add `scalaVersion` parameter for Scala 2.x support
+- Notes:
+  - Hardcoded `_3` suffix - only Scala 3 artifacts supported
+  - Can fetch Scaladoc for cats-effect, zio, and other Scala 3 libraries
+
+**Files changed:**
+
+```
+M  src/main/scala/javadocsmcp/domain/ArtifactCoordinates.scala
+M  src/main/scala/javadocsmcp/infrastructure/CoursierArtifactRepository.scala
+M  src/main/scala/javadocsmcp/presentation/ToolDefinitions.scala
+M  src/test/scala/javadocsmcp/domain/ArtifactCoordinatesTest.scala
+M  src/test/scala/javadocsmcp/infrastructure/CoursierArtifactRepositoryTest.scala
+M  src/test/scala/javadocsmcp/application/DocumentationServiceIntegrationTest.scala
+M  src/test/scala/javadocsmcp/integration/EndToEndTest.scala
+```
+
+---
+
+### Refactoring R1: Replace hardcoded Scala suffix with coursier/dependency library (2025-12-29)
+
+**Trigger:** Code review identified that the hardcoded `_3` suffix in `CoursierArtifactRepository.resolveArtifactName()` is inflexible - it only supports Scala 3 artifacts and provides no way for users to fetch Scala 2.13 library documentation.
+
+**What changed:**
+
+- **Dependencies:**
+  - Added `io.get-coursier::dependency:0.2.3` library for proper Scala coordinate resolution
+
+- **Infrastructure Layer:**
+  - `CoursierArtifactRepository.scala` - Replaced `resolveArtifactName()` with `resolveArtifact()` using `DependencyParser` and `ScalaParameters.applyParams()`
+  - Added `scalaVersion: String = "3"` parameter to `fetchJavadocJar()` and `fetchSourcesJar()`
+
+- **Port Trait:**
+  - `ArtifactRepository.scala` - Added `scalaVersion` parameter to fetch method signatures
+
+- **Application Layer:**
+  - `DocumentationService.scala` - Added `scalaVersion: Option[String] = None` parameter, defaults to "3"
+  - `SourceCodeService.scala` - Added `scalaVersion: Option[String] = None` parameter, defaults to "3"
+
+- **Presentation Layer:**
+  - `GetDocInput` and `GetSourceInput` - Added `scalaVersion: Option[String] = None` field
+  - Tool descriptions updated to document the new parameter
+
+- **Test Infrastructure:**
+  - `InMemoryArtifactRepository` - Added scalaVersion call capture for test verification
+
+**Before → After:**
+
+```scala
+// Before: hardcoded _3 suffix
+private def resolveArtifactName(coords: ArtifactCoordinates): String =
+  if coords.scalaArtifact then s"${coords.artifactId}_3"
+  else coords.artifactId
+
+// After: coursier/dependency library resolves correctly
+private def resolveArtifact(coords: ArtifactCoordinates, scalaVersion: String): (String, String, String) =
+  if coords.scalaArtifact then
+    val dep = DependencyParser.parse(s"${coords.groupId}::${coords.artifactId}:${coords.version}")
+    val resolved = dep.toOption.get.applyParams(ScalaParameters(scalaVersion))
+    (resolved.module.organization, resolved.module.name, resolved.version)
+  else
+    (coords.groupId, coords.artifactId, coords.version)
+```
+
+**Benefits:**
+
+- Can now fetch Scala 2.13 documentation with `scalaVersion="2.13"`
+- Can now fetch Scala 2.12 documentation with `scalaVersion="2.12"`
+- Defaults to Scala 3 (`_3` suffix) for backward compatibility
+- Explicit suffix escape hatch: `org.typelevel:cats-effect_2.13:3.5.4` bypasses resolution
+
+**Testing:**
+
+- Unit tests: 6 new tests for scalaVersion parameter passing
+- Integration tests: 3 new tests for Scala version resolution
+- E2E tests: 5 new tests for scalaVersion parameter via MCP
+- Total: 56 tests passing (up from 46)
+
+**Code review:**
+
+- Iterations: 1
+- Review file: review-refactor-03-R1-20251229.md
+- Critical issues found: 3 (missing tests for scalaVersion)
+- All critical issues fixed
+
+**Files changed:**
+
+```
+M  project.scala
+M  src/main/scala/javadocsmcp/domain/ports/ArtifactRepository.scala
+M  src/main/scala/javadocsmcp/infrastructure/CoursierArtifactRepository.scala
+M  src/main/scala/javadocsmcp/application/DocumentationService.scala
+M  src/main/scala/javadocsmcp/application/SourceCodeService.scala
+M  src/main/scala/javadocsmcp/presentation/ToolDefinitions.scala
+M  src/test/scala/javadocsmcp/testkit/InMemoryArtifactRepository.scala
+M  src/test/scala/javadocsmcp/application/DocumentationServiceTest.scala
+M  src/test/scala/javadocsmcp/application/SourceCodeServiceTest.scala
+M  src/test/scala/javadocsmcp/infrastructure/CoursierArtifactRepositoryTest.scala
+M  src/test/scala/javadocsmcp/integration/EndToEndTest.scala
+```
+
+---
