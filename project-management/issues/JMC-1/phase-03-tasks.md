@@ -201,6 +201,12 @@ This phase extends the existing `get_documentation` tool to support Scala librar
 
 ---
 
+## Refactoring Tasks
+
+- [ ] [impl] [ ] [reviewed] Refactoring R1: Replace hardcoded Scala suffix with coursier/dependency library
+
+---
+
 ## Acceptance Checklist
 
 Before marking Phase 3 complete, verify ALL criteria:

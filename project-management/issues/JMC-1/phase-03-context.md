@@ -826,6 +826,34 @@ Upon completion of Phase 3, you will have:
 
 ---
 
+## Refactoring Decisions
+
+### R1: Replace hardcoded Scala suffix with coursier/dependency library (2025-12-29)
+
+**Trigger:** Code review discussion identified that the hardcoded `_3` suffix in `CoursierArtifactRepository.resolveArtifactName()` is inflexible - it only supports Scala 3 artifacts and provides no way for users to fetch Scala 2.13 library documentation.
+
+**Decision:** Replace manual suffix handling with the `coursier/dependency` library's `ScalaParameters` approach, plus add optional `scalaVersion` parameter to MCP tools.
+
+**Scope:**
+- Files affected: `project.scala`, `CoursierArtifactRepository.scala`, `ToolDefinitions.scala`, `ArtifactCoordinates.scala`
+- Components: Infrastructure layer (Coursier), Presentation layer (tool schemas)
+- Boundaries: DO NOT change `DocumentationService`, `SourceCodeService`, or `JarFileReader`
+
+**Approach:**
+1. Add `io.get-coursier::dependency` library to project.scala
+2. Use `dep"..."` string interpolator for parsing coordinates
+3. Use `ScalaParameters(version).applyParams()` to resolve concrete artifact names
+4. Add optional `scalaVersion: Option[String]` parameter to `GetDocInput`/`GetSourceInput` (default: "3")
+5. Users can still specify explicit suffixes (`org.typelevel:cats-effect_2.13:3.5.4`) for full control
+
+**Benefits:**
+- Proper `::` parsing via library (not custom code)
+- Supports both Scala 2.x and Scala 3
+- User can override default Scala version per request
+- Explicit suffix coordinates still work (backward compatible)
+
+---
+
 ## Notes for Implementation
 
 ### Critical Decision Point: Coursier Handling
