@@ -299,3 +299,80 @@ A  src/test/scala/javadocsmcp/testkit/InMemoryJarContentReader.scala
 ```
 
 ---
+
+## Phase 3: Fetch Scaladoc HTML for Scala class (2025-12-29)
+
+**What was built:**
+
+- **Domain Layer:**
+  - `ArtifactCoordinates.scala` - Added `scalaArtifact: Boolean` field and `::` separator parsing
+  - Added `parseScalaCoordinates()` private method for Scala coordinate handling
+
+- **Infrastructure Layer:**
+  - `CoursierArtifactRepository.scala` - Added `resolveArtifactName()` for Scala `_3` suffix
+  - Refactored `fetchJavadocJar()` and `fetchSourcesJar()` to use common `fetchJar()` method
+  - Added comment documenting Scala 3 assumption
+
+- **Presentation Layer:**
+  - `ToolDefinitions.scala` - Updated descriptions with Scala examples
+
+**Decisions made:**
+
+- Use `::` separator to detect Scala coordinates (e.g., `org.typelevel::cats-effect:3.5.4`)
+- Append `_3` suffix for Scala 3 artifacts (Scala 2.x support deferred to future phase)
+- Scaladoc uses same `-javadoc` classifier as Javadoc (no classifier change needed)
+- No changes to `DocumentationService` - transparent support via parsing layer
+
+**Patterns applied:**
+
+- **DRY Refactoring:** Extracted `resolveArtifactName()` and `fetchJar()` common methods
+- **Transparent Extension:** Service layer unchanged, coordinate parsing handles Java/Scala difference
+- **Domain-Driven Parsing:** Coordinate type detected and tracked in domain model
+
+**Coursier Research Findings:**
+
+- Coursier does NOT automatically handle `::` syntax in `Dependency.parse()`
+- Must manually append Scala version suffix (`_3`, `_2.13`, etc.) to artifact ID
+- Module construction uses `ModuleName(artifactId_3)` for Scala artifacts
+
+**Testing:**
+
+- Unit tests: 5 new tests (Scala coordinate parsing and regression)
+- Integration tests: 4 new tests (cats-effect and ZIO Scaladoc fetching)
+- E2E tests: 3 new tests (Scala documentation via HTTP)
+- All 46 tests passing
+
+**Code review:**
+
+- Iterations: 1 (+ 1 fix iteration)
+- Review file: review-phase-03-20251229.md
+- Result: PASSED after fixing DRY violation
+- Fixed: Extracted `resolveArtifactName()` and `fetchJar()` methods
+- Deferred: Scala 2.x support (per MVP scope), boolean→enum refactor
+
+**For next phases:**
+
+- Available utilities:
+  - `ArtifactCoordinates.parse()` handles both `:` and `::`
+  - `resolveArtifactName()` applies Scala version suffix
+  - `fetchJar()` generalized for any classifier
+- Extension points:
+  - Phase 4: Add `.scala` extension support to `ClassName.toSourcePath()`
+  - Future: Add `scalaVersion` parameter for Scala 2.x support
+- Notes:
+  - Hardcoded `_3` suffix - only Scala 3 artifacts supported
+  - Can fetch Scaladoc for cats-effect, zio, and other Scala 3 libraries
+
+**Files changed:**
+
+```
+M  src/main/scala/javadocsmcp/domain/ArtifactCoordinates.scala
+M  src/main/scala/javadocsmcp/infrastructure/CoursierArtifactRepository.scala
+M  src/main/scala/javadocsmcp/presentation/ToolDefinitions.scala
+M  src/test/scala/javadocsmcp/domain/ArtifactCoordinatesTest.scala
+M  src/test/scala/javadocsmcp/infrastructure/CoursierArtifactRepositoryTest.scala
+M  src/test/scala/javadocsmcp/application/DocumentationServiceIntegrationTest.scala
+M  src/test/scala/javadocsmcp/integration/EndToEndTest.scala
+```
+
+---
