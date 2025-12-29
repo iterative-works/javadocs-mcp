@@ -1,5 +1,5 @@
-// PURPOSE: Repository for fetching javadoc JAR artifacts from Maven Central using Coursier
-// PURPOSE: Downloads and caches javadoc artifacts with -javadoc classifier
+// PURPOSE: Repository for fetching library artifacts from Maven Central using Coursier
+// PURPOSE: Downloads and caches artifacts with javadoc or sources classifiers
 
 package javadocsmcp.infrastructure
 
@@ -35,6 +35,33 @@ class CoursierArtifactRepository extends ArtifactRepository:
       case Success(file) => Right(file)
       case Failure(exception) =>
         Left(ArtifactNotFound(s"${coords.groupId}:${coords.artifactId}:${coords.version}"))
+    }
+  }
+
+  def fetchSourcesJar(coords: ArtifactCoordinates): Either[DocumentationError, File] = {
+    Try {
+      val module = Module(
+        Organization(coords.groupId),
+        ModuleName(coords.artifactId)
+      )
+
+      val attributes = Attributes(Type.jar, Classifier("sources"))
+      val dependency = Dependency(module, coords.version).withAttributes(attributes)
+
+      val fetch = Fetch()
+        .addDependencies(dependency)
+
+      val files = fetch.run()
+
+      if (files.isEmpty) {
+        throw new RuntimeException(s"No sources JAR found for ${coords.groupId}:${coords.artifactId}:${coords.version}")
+      }
+
+      files.head
+    } match {
+      case Success(file) => Right(file)
+      case Failure(exception) =>
+        Left(SourcesNotAvailable(s"${coords.groupId}:${coords.artifactId}:${coords.version}"))
     }
   }
 

@@ -33,4 +33,21 @@ class CoursierArtifactRepositoryTest extends munit.FunSuite {
     val jarFile = result.toOption.get
     assert(jarFile.exists(), "Downloaded JAR file should exist")
   }
+
+  test("fetch sources JAR for slf4j-api") {
+    val coords = ArtifactCoordinates("org.slf4j", "slf4j-api", "2.0.9")
+    val result = repository.fetchSourcesJar(coords)
+
+    assert(result.isRight, "Should successfully fetch slf4j sources JAR from Maven Central")
+    val jarFile = result.toOption.get
+    assert(jarFile.exists(), "Downloaded sources JAR file should exist")
+    assert(jarFile.getName.endsWith(".jar"), "File should be a JAR")
+  }
+
+  test("return error for sources JAR when artifact does not exist") {
+    val coords = ArtifactCoordinates("com.fake.nonexistent", "does-not-exist", "1.0.0")
+    val result = repository.fetchSourcesJar(coords)
+
+    assert(result.isLeft, "Should return error for non-existent artifact sources")
+  }
 }

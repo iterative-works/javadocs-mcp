@@ -1,4 +1,4 @@
-// PURPOSE: Port trait defining the contract for fetching javadoc artifacts
+// PURPOSE: Port trait defining the contract for fetching library artifacts
 // PURPOSE: Abstracts artifact retrieval to allow different implementations
 
 package javadocsmcp.domain.ports
@@ -8,3 +8,4 @@ import java.io.File
 
 trait ArtifactRepository:
   def fetchJavadocJar(coords: ArtifactCoordinates): Either[DocumentationError, File]
+  def fetchSourcesJar(coords: ArtifactCoordinates): Either[DocumentationError, File]
