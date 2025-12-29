@@ -3,22 +3,14 @@
 
 package javadocsmcp.domain
 
-sealed trait DocumentationError {
-  def message: String
-}
+enum DocumentationError:
+  case ArtifactNotFound(coordinates: String)
+  case ClassNotFound(className: String)
+  case InvalidCoordinates(input: String)
+  case InvalidClassName(input: String)
 
-case class ArtifactNotFound(coordinates: String) extends DocumentationError {
-  def message: String = s"Artifact not found: $coordinates"
-}
-
-case class ClassNotFound(className: String) extends DocumentationError {
-  def message: String = s"Class not found in javadoc: $className"
-}
-
-case class InvalidCoordinates(input: String) extends DocumentationError {
-  def message: String = s"Invalid Maven coordinates format: $input. Expected format: groupId:artifactId:version"
-}
-
-case class InvalidClassName(input: String) extends DocumentationError {
-  def message: String = s"Invalid class name: $input"
-}
+  def message: String = this match
+    case ArtifactNotFound(coordinates) => s"Artifact not found: $coordinates"
+    case ClassNotFound(className) => s"Class not found in javadoc: $className"
+    case InvalidCoordinates(input) => s"Invalid Maven coordinates format: $input. Expected format: groupId:artifactId:version"
+    case InvalidClassName(input) => s"Invalid class name: $input"

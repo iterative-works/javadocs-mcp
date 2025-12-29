@@ -15,11 +15,11 @@ case class GetDocInput(
 
 object ToolDefinitions {
   def getDocumentationTool(service: DocumentationService) = {
-    val adderTool = tool("get_documentation")
+    val docTool = tool("get_documentation")
       .description("Fetch Javadoc HTML documentation for a Java library class")
       .input[GetDocInput]
 
-    adderTool.handle { input =>
+    docTool.handle { input =>
       service.getDocumentation(input.coordinates, input.className) match {
         case Right(doc) => Right(doc.htmlContent)
         case Left(error) => Left(error.message)

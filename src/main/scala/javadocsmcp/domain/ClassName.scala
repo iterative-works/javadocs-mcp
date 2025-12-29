@@ -3,6 +3,8 @@
 
 package javadocsmcp.domain
 
+import DocumentationError.*
+
 case class ClassName(fullyQualifiedName: String) {
   def toHtmlPath: String = {
     // Strip inner class suffix (e.g., Logger$Factory -> Logger)
@@ -15,13 +17,10 @@ case class ClassName(fullyQualifiedName: String) {
 }
 
 object ClassName {
-  def parse(name: String): Either[DocumentationError, ClassName] = {
+  def parse(name: String): Either[DocumentationError, ClassName] =
     val trimmed = name.trim
-
-    if (trimmed.isEmpty) {
-      return Left(InvalidClassName(name))
-    }
-
-    Right(ClassName(trimmed))
-  }
+    if trimmed.isEmpty then
+      Left(InvalidClassName(name))
+    else
+      Right(ClassName(trimmed))
 }

@@ -4,7 +4,8 @@
 package javadocsmcp.infrastructure
 
 import coursier.*
-import javadocsmcp.domain.{ArtifactCoordinates, ArtifactNotFound, DocumentationError}
+import javadocsmcp.domain.{ArtifactCoordinates, DocumentationError}
+import DocumentationError.*
 import java.io.File
 import scala.util.{Try, Success, Failure}
 

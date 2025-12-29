@@ -3,7 +3,8 @@
 
 package javadocsmcp.infrastructure
 
-import javadocsmcp.domain.{ClassNotFound, DocumentationError}
+import javadocsmcp.domain.DocumentationError
+import DocumentationError.*
 import java.io.File
 import java.util.jar.JarFile
 import scala.io.Source
