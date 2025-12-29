@@ -2,7 +2,7 @@
 
 **Phase:** 1
 **Created:** 2025-12-29
-**Status:** Planned
+**Status:** In Progress
 
 ## Decision Summary
 
@@ -76,15 +76,15 @@ trait DocumentationReader:
 
 ## Step 1: Extract Traits and Update Wiring
 
-- [ ] [impl] Create `domain/ports/` directory
-- [ ] [impl] Create `domain/ports/ArtifactRepository.scala` trait
-- [ ] [impl] Create `domain/ports/DocumentationReader.scala` trait
-- [ ] [impl] Update `CoursierArtifactRepository` to extend `ArtifactRepository`
-- [ ] [impl] Update `JarFileReader` to extend `DocumentationReader`
-- [ ] [impl] Update `DocumentationService` to depend on trait types
-- [ ] [impl] Update `Main.scala` imports (if needed)
-- [ ] [verify] Run all existing tests, ensure they pass
-- [ ] [commit] Commit: "refactor(arch): extract port traits for hexagonal architecture"
+- [x] [impl] Create `domain/ports/` directory
+- [x] [impl] Create `domain/ports/ArtifactRepository.scala` trait
+- [x] [impl] Create `domain/ports/DocumentationReader.scala` trait
+- [x] [impl] Update `CoursierArtifactRepository` to extend `ArtifactRepository`
+- [x] [impl] Update `JarFileReader` to extend `DocumentationReader`
+- [x] [impl] Update `DocumentationService` to depend on trait types
+- [x] [impl] Update `Main.scala` imports (if needed) - No changes needed
+- [x] [verify] Run all existing tests, ensure they pass
+- [x] [commit] Commit: "refactor(arch): extract port traits for hexagonal architecture"
 
 ## Step 2: Create Test Implementations and Refactor Tests
 
