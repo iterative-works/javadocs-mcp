@@ -274,6 +274,14 @@ Before marking Phase 1 complete, verify ALL criteria:
 
 ---
 
+---
+
+## Refactoring Tasks
+
+- [ ] [impl] [ ] [reviewed] Refactoring R1: Extract Port Traits for Hexagonal Architecture
+
+---
+
 **Next Steps After Phase 1:**
 1. Mark all tasks complete
 2. Update `project-management/issues/JMC-1/tasks.md` - mark Phase 1 complete

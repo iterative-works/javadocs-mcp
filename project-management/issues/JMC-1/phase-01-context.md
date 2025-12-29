@@ -699,3 +699,31 @@ Upon completion of Phase 1, you will have:
 **Confidence:** Medium-High (Chimp reduces complexity, but Coursier API is new)
 
 **Start implementation with:** `/iterative-works:ag-implement JMC-1`
+
+---
+
+## Refactoring Decisions
+
+### R1: Extract Port Traits for Hexagonal Architecture (2025-12-29)
+
+**Trigger:** Code review (`review-phase-01-20251228.md`) identified critical architecture issues:
+- Application layer (`DocumentationService`) depends on concrete infrastructure classes
+- Violates Dependency Inversion Principle
+- No port interfaces defined for dependency injection
+- Tests cannot use in-memory implementations because there are no interfaces to implement
+
+**Decision:** Extract port traits and implement proper hexagonal architecture:
+- Create `ArtifactRepository` trait (abstracts artifact fetching)
+- Create `DocumentationReader` trait (abstracts content reading from sources)
+- Update `DocumentationService` to depend on traits, not concrete classes
+- Update `Main.scala` wiring to inject concrete implementations
+- Create in-memory test implementations for unit testing
+
+**Scope:**
+- Files affected: `DocumentationService.scala`, `Main.scala`, new port traits, test files
+- Components: Application layer, infrastructure layer, tests
+- Boundaries: Do NOT change domain logic, presentation layer, or existing behavior
+
+**Approach:** Two-step implementation:
+1. **Step 1:** Extract port traits in `domain/ports/`, update `DocumentationService` and `Main` wiring
+2. **Step 2:** Create in-memory test implementations, refactor tests to use them
