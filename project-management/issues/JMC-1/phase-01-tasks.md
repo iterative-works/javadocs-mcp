@@ -165,7 +165,7 @@ This phase establishes the foundational vertical slice: MCP HTTP server → Cour
 - [x] [impl] Verify error handling works end-to-end
 - [x] [test] Write E2E test for non-existent class in valid artifact: expect "Class not found"
 - [x] [impl] Ensure all error paths work correctly
-- [ ] [setup] Commit: "test: add E2E tests for get_documentation tool"
+- [x] [setup] Commit: "test: add E2E tests for get_documentation tool"
 
 ---
 
