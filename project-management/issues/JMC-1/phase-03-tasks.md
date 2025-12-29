@@ -39,30 +39,30 @@ This phase extends the existing `get_documentation` tool to support Scala librar
 
 ### Add Scala Coordinate Parsing
 
-- [ ] [test] Write failing test for parsing `"org.typelevel::cats-effect:3.5.4"` with `::` separator
-- [ ] [test] Assert groupId = "org.typelevel", artifactId = "cats-effect", version = "3.5.4"
-- [ ] [impl] Add `scalaArtifact: Boolean = false` field to `ArtifactCoordinates` case class
-- [ ] [impl] Update `parse()` to detect `::` and route to Scala parser
-- [ ] [impl] Implement `parseScalaCoordinates()` private method
-- [ ] [impl] Split on `"::"`, then split remainder on `":"` for version
-- [ ] [impl] Set `scalaArtifact = true` for Scala coordinates
-- [ ] [impl] Run test, ensure it passes
+- [x] [impl] [x] [reviewed] Write failing test for parsing `"org.typelevel::cats-effect:3.5.4"` with `::` separator
+- [x] [impl] [x] [reviewed] Assert groupId = "org.typelevel", artifactId = "cats-effect", version = "3.5.4"
+- [x] [impl] [x] [reviewed] Add `scalaArtifact: Boolean = false` field to `ArtifactCoordinates` case class
+- [x] [impl] [x] [reviewed] Update `parse()` to detect `::` and route to Scala parser
+- [x] [impl] [x] [reviewed] Implement `parseScalaCoordinates()` private method
+- [x] [impl] [x] [reviewed] Split on `"::"`, then split remainder on `":"` for version
+- [x] [impl] [x] [reviewed] Set `scalaArtifact = true` for Scala coordinates
+- [x] [impl] [x] [reviewed] Run test, ensure it passes
 
 ### Additional Scala Coordinate Tests
 
-- [ ] [test] Write failing test for `"dev.zio::zio:2.0.21"` → verify parsing
-- [ ] [impl] Verify test passes with existing implementation
-- [ ] [test] Write failing test for invalid Scala coordinates: `"org.typelevel::cats-effect"` (missing version)
-- [ ] [impl] Ensure validation rejects invalid format
-- [ ] [test] Write failing test for wrong separator count: `"org.typelevel:::cats-effect:3.5.4"`
-- [ ] [impl] Ensure validation handles edge case
+- [x] [impl] [x] [reviewed] Write failing test for `"dev.zio::zio:2.0.21"` → verify parsing
+- [x] [impl] [x] [reviewed] Verify test passes with existing implementation
+- [x] [impl] [x] [reviewed] Write failing test for invalid Scala coordinates: `"org.typelevel::cats-effect"` (missing version)
+- [x] [impl] [x] [reviewed] Ensure validation rejects invalid format
+- [x] [impl] [x] [reviewed] Write failing test for wrong separator count: `"org.typelevel:::cats-effect:3.5.4"`
+- [x] [impl] [x] [reviewed] Ensure validation handles edge case
 
 ### Regression Tests
 
-- [ ] [test] Write regression test: Java coordinates `"org.slf4j:slf4j-api:2.0.9"` still work
-- [ ] [test] Assert `scalaArtifact = false` for Java coordinates
-- [ ] [impl] Verify all existing tests still pass
-- [ ] [setup] Commit: "feat(domain): add Scala coordinate parsing with :: separator"
+- [x] [impl] [x] [reviewed] Write regression test: Java coordinates `"org.slf4j:slf4j-api:2.0.9"` still work
+- [x] [impl] [x] [reviewed] Assert `scalaArtifact = false` for Java coordinates
+- [x] [impl] [x] [reviewed] Verify all existing tests still pass
+- [x] [impl] [x] [reviewed] Commit: "feat(domain): add Scala coordinate parsing with :: separator"
 
 ---
 

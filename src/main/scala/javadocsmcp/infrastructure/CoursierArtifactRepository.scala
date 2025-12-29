@@ -13,9 +13,15 @@ import scala.util.{Try, Success, Failure}
 class CoursierArtifactRepository extends ArtifactRepository:
   def fetchJavadocJar(coords: ArtifactCoordinates): Either[DocumentationError, File] = {
     Try {
+      val artifactName = if (coords.scalaArtifact) {
+        s"${coords.artifactId}_3"
+      } else {
+        coords.artifactId
+      }
+
       val module = Module(
         Organization(coords.groupId),
-        ModuleName(coords.artifactId)
+        ModuleName(artifactName)
       )
 
       val attributes = Attributes(Type.jar, Classifier("javadoc"))
@@ -27,22 +33,29 @@ class CoursierArtifactRepository extends ArtifactRepository:
       val files = fetch.run()
 
       if (files.isEmpty) {
-        throw new RuntimeException(s"No javadoc JAR found for ${coords.groupId}:${coords.artifactId}:${coords.version}")
+        throw new RuntimeException(s"No javadoc JAR found for ${coords.groupId}:$artifactName:${coords.version}")
       }
 
       files.head
     } match {
       case Success(file) => Right(file)
       case Failure(exception) =>
-        Left(ArtifactNotFound(s"${coords.groupId}:${coords.artifactId}:${coords.version}"))
+        val artifactName = if (coords.scalaArtifact) s"${coords.artifactId}_3" else coords.artifactId
+        Left(ArtifactNotFound(s"${coords.groupId}:$artifactName:${coords.version}"))
     }
   }
 
   def fetchSourcesJar(coords: ArtifactCoordinates): Either[DocumentationError, File] = {
     Try {
+      val artifactName = if (coords.scalaArtifact) {
+        s"${coords.artifactId}_3"
+      } else {
+        coords.artifactId
+      }
+
       val module = Module(
         Organization(coords.groupId),
-        ModuleName(coords.artifactId)
+        ModuleName(artifactName)
       )
 
       val attributes = Attributes(Type.jar, Classifier("sources"))
@@ -54,14 +67,15 @@ class CoursierArtifactRepository extends ArtifactRepository:
       val files = fetch.run()
 
       if (files.isEmpty) {
-        throw new RuntimeException(s"No sources JAR found for ${coords.groupId}:${coords.artifactId}:${coords.version}")
+        throw new RuntimeException(s"No sources JAR found for ${coords.groupId}:$artifactName:${coords.version}")
       }
 
       files.head
     } match {
       case Success(file) => Right(file)
       case Failure(exception) =>
-        Left(SourcesNotAvailable(s"${coords.groupId}:${coords.artifactId}:${coords.version}"))
+        val artifactName = if (coords.scalaArtifact) s"${coords.artifactId}_3" else coords.artifactId
+        Left(SourcesNotAvailable(s"${coords.groupId}:$artifactName:${coords.version}"))
     }
   }
 

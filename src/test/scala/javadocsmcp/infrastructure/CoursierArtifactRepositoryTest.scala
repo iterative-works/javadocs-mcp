@@ -50,4 +50,60 @@ class CoursierArtifactRepositoryTest extends munit.FunSuite {
 
     assert(result.isLeft, "Should return error for non-existent artifact sources")
   }
+
+  test("fetch Scaladoc JAR for cats-effect") {
+    val coords = ArtifactCoordinates(
+      groupId = "org.typelevel",
+      artifactId = "cats-effect",
+      version = "3.5.4",
+      scalaArtifact = true
+    )
+    val result = repository.fetchJavadocJar(coords)
+
+    assert(result.isRight, "Should successfully fetch cats-effect Scaladoc JAR")
+    val jarFile = result.toOption.get
+    assert(jarFile.exists(), "Downloaded JAR file should exist")
+    assert(jarFile.getName.contains("cats-effect"), "Filename should contain artifact name")
+    assert(jarFile.getName.contains("javadoc"), "Should be javadoc JAR")
+  }
+
+  test("fetch Scaladoc JAR for ZIO") {
+    val coords = ArtifactCoordinates(
+      groupId = "dev.zio",
+      artifactId = "zio",
+      version = "2.0.21",
+      scalaArtifact = true
+    )
+    val result = repository.fetchJavadocJar(coords)
+
+    assert(result.isRight, "Should successfully fetch ZIO Scaladoc JAR")
+    val jarFile = result.toOption.get
+    assert(jarFile.exists(), "Downloaded JAR file should exist")
+  }
+
+  test("return error for non-existent Scala artifact") {
+    val coords = ArtifactCoordinates(
+      groupId = "com.fake",
+      artifactId = "nonexistent",
+      version = "1.0.0",
+      scalaArtifact = true
+    )
+    val result = repository.fetchJavadocJar(coords)
+
+    assert(result.isLeft, "Should return error for non-existent Scala artifact")
+  }
+
+  test("fetch sources JAR for Scala artifact (cats-effect)") {
+    val coords = ArtifactCoordinates(
+      groupId = "org.typelevel",
+      artifactId = "cats-effect",
+      version = "3.5.4",
+      scalaArtifact = true
+    )
+    val result = repository.fetchSourcesJar(coords)
+
+    assert(result.isRight, "Should successfully fetch cats-effect sources JAR")
+    val jarFile = result.toOption.get
+    assert(jarFile.exists(), "Downloaded sources JAR file should exist")
+  }
 }
