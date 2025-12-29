@@ -47,12 +47,12 @@ This phase establishes the **foundational vertical slice** for the javadocs-mcp 
 
 ## Scenarios
 
-- [ ] **Happy path**: Invoke `get_documentation` with `org.slf4j:slf4j-api:2.0.9` and `org.slf4j.Logger` → receive valid HTML
-- [ ] **Inner class handling**: Request `org.slf4j.Logger$Factory` → correctly maps to `Logger.html`
-- [ ] **Missing artifact**: Request non-existent artifact → receive clear "Artifact not found" error
-- [ ] **Missing class**: Request non-existent class in valid artifact → receive "Class not found" error
-- [ ] **Invalid coordinates**: Request with malformed coordinates → receive validation error
-- [ ] **Server startup**: Server starts on port 8080 without errors
+- [x] **Happy path**: Invoke `get_documentation` with `org.slf4j:slf4j-api:2.0.9` and `org.slf4j.Logger` → receive valid HTML
+- [x] **Inner class handling**: Request `org.slf4j.Logger$Factory` → correctly maps to `Logger.html`
+- [x] **Missing artifact**: Request non-existent artifact → receive clear "Artifact not found" error
+- [x] **Missing class**: Request non-existent class in valid artifact → receive "Class not found" error
+- [x] **Invalid coordinates**: Request with malformed coordinates → receive validation error
+- [x] **Server startup**: Server starts on port 8080 without errors
 
 ---
 
