@@ -2,6 +2,7 @@
   "status": "awaiting_review",
   "phase": 2,
   "message": "Phase 2 complete - Fetch source code for Java class",
+  "pr_url": "https://github.com/iterative-works/javadocs-mcp/pull/4",
   "artifacts": [
     {"label": "Analysis", "path": "project-management/issues/JMC-1/analysis.md"},
     {"label": "Implementation Log", "path": "project-management/issues/JMC-1/implementation-log.md"},
