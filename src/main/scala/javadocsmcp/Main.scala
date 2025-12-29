@@ -3,7 +3,7 @@
 
 package javadocsmcp
 
-import javadocsmcp.application.DocumentationService
+import javadocsmcp.application.{DocumentationService, SourceCodeService}
 import javadocsmcp.infrastructure.{CoursierArtifactRepository, JarFileReader}
 import javadocsmcp.presentation.McpServer
 
@@ -14,7 +14,8 @@ import javadocsmcp.presentation.McpServer
 
   val repository = CoursierArtifactRepository()
   val reader = JarFileReader()
-  val service = DocumentationService(repository, reader)
+  val documentationService = DocumentationService(repository, reader)
+  val sourceCodeService = SourceCodeService(repository, reader)
 
-  McpServer.start(service, port)
+  McpServer.start(documentationService, sourceCodeService, port)
 }

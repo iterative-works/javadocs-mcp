@@ -3,7 +3,7 @@
 
 package javadocsmcp.integration
 
-import javadocsmcp.application.DocumentationService
+import javadocsmcp.application.{DocumentationService, SourceCodeService}
 import javadocsmcp.infrastructure.{CoursierArtifactRepository, JarFileReader}
 import javadocsmcp.presentation.McpServer
 import sttp.client3.*
@@ -18,9 +18,10 @@ class EndToEndTest extends munit.FunSuite:
   override def beforeAll(): Unit = {
     val repository = CoursierArtifactRepository()
     val reader = JarFileReader()
-    val service = DocumentationService(repository, reader)
+    val documentationService = DocumentationService(repository, reader)
+    val sourceCodeService = SourceCodeService(repository, reader)
 
-    server = Some(McpServer.startAsync(service, testPort))
+    server = Some(McpServer.startAsync(documentationService, sourceCodeService, testPort))
     // Give server time to start
     Thread.sleep(2000)
   }
