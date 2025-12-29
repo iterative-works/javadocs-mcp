@@ -42,4 +42,32 @@ class SourceCodeServiceIntegrationTest extends munit.FunSuite {
     val source = result.toOption.get
     assert(source.sourceText.contains("public interface Logger"))
   }
+
+  test("fetch Scala source for cats.effect.IO") {
+    val result = service.getSource("org.typelevel::cats-effect:3.5.4", "cats.effect.IO")
+
+    assert(result.isRight, s"Should successfully fetch IO.scala source but got: $result")
+    val source = result.toOption.get
+    assert(source.sourceText.contains("sealed abstract class IO"),
+      "Should contain Scala-specific syntax 'sealed abstract class IO'")
+    assert(source.sourceText.contains("def flatMap"),
+      "Should contain flatMap method")
+    assertEquals(source.className.fullyQualifiedName, "cats.effect.IO")
+    assertEquals(source.coordinates.groupId, "org.typelevel")
+    assertEquals(source.coordinates.artifactId, "cats-effect")
+    assertEquals(source.coordinates.version, "3.5.4")
+  }
+
+  test("fetch Scala source for zio.ZIO") {
+    val result = service.getSource("dev.zio::zio:2.0.21", "zio.ZIO")
+
+    assert(result.isRight, s"Should successfully fetch ZIO.scala source but got: $result")
+    val source = result.toOption.get
+    assert(source.sourceText.contains("sealed trait ZIO") || source.sourceText.contains("sealed abstract class ZIO"),
+      "Should contain Scala-specific trait or class definition")
+    assertEquals(source.className.fullyQualifiedName, "zio.ZIO")
+    assertEquals(source.coordinates.groupId, "dev.zio")
+    assertEquals(source.coordinates.artifactId, "zio")
+    assertEquals(source.coordinates.version, "2.0.21")
+  }
 }

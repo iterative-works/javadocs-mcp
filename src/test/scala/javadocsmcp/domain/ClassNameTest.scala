@@ -67,4 +67,21 @@ class ClassNameTest extends munit.FunSuite {
     assertEquals(className.toSourcePath, "com/example/Outer.java",
       "Should use only the outermost class for source path")
   }
+
+  test("convert class name to Scala source path") {
+    val result = ClassName.parse("cats.effect.IO")
+
+    assert(result.isRight, "Should successfully parse valid class name")
+    val className = result.toOption.get
+    assertEquals(className.toScalaSourcePath, "cats/effect/IO.scala")
+  }
+
+  test("strip inner class suffix for Scala source path") {
+    val result = ClassName.parse("cats.effect.IO$Pure")
+
+    assert(result.isRight, "Should successfully parse class with inner class suffix")
+    val className = result.toOption.get
+    assertEquals(className.toScalaSourcePath, "cats/effect/IO.scala",
+      "Should strip $Pure and use outer class for Scala source path")
+  }
 }

@@ -8,36 +8,33 @@
 
 ## Setup
 
-- [ ] [setup] Verify existing tests pass before changes
+- [x] [setup] Verify existing tests pass before changes
 
 ## Tests First (TDD)
 
-- [ ] [test] Add unit test: `ClassName.toScalaSourcePath` returns `.scala` extension
-- [ ] [test] Add unit test: `ClassName.toScalaSourcePath` strips inner class suffix
-- [ ] [test] Add unit test: `SourceCodeService` with Scala artifact tries `.scala` first
-- [ ] [test] Add unit test: `SourceCodeService` with Scala artifact falls back to `.java`
-- [ ] [test] Add unit test: `SourceCodeService` with Java artifact only tries `.java`
-- [ ] [test] Add integration test: Fetch cats-effect IO.scala from Maven Central
-- [ ] [test] Add integration test: Verify source contains Scala syntax
-- [ ] [test] Add E2E test: `get_source` with Scala coordinates returns Scala source
+- [x] [test] Add unit test: `ClassName.toScalaSourcePath` returns `.scala` extension
+- [x] [test] Add unit test: `ClassName.toScalaSourcePath` strips inner class suffix
+- [x] [test] Add unit test: `SourceCodeService` with Scala artifact tries `.scala` first
+- [x] [test] Add unit test: `SourceCodeService` with Scala artifact falls back to `.java`
+- [x] [test] Add unit test: `SourceCodeService` with Java artifact only tries `.java`
+- [x] [test] Add integration test: Fetch cats-effect IO.scala from Maven Central
+- [x] [test] Add integration test: Verify source contains Scala syntax
+- [x] [test] Add E2E test: `get_source` with Scala coordinates returns Scala source
 
 ## Implementation
 
-- [ ] [impl] Add `toScalaSourcePath` method to `ClassName`
-- [ ] [impl] Update `JarContentReader` port to support entry existence check
-- [ ] [impl] Update `JarFileReader` to implement entry existence check
-- [ ] [impl] Update `InMemoryJarContentReader` testkit for fallback testing
-- [ ] [impl] Update `SourceCodeService` to try `.scala` then `.java` for Scala artifacts
+- [x] [impl] Add `toScalaSourcePath` method to `ClassName`
+- [x] [impl] Update `SourceCodeService` to try `.scala` then `.java` for Scala artifacts
 
 ## Integration
 
-- [ ] [integ] Run all tests and verify no regressions
+- [x] [integ] Run all tests and verify no regressions
 - [ ] [integ] Test manually with MCP server (optional)
 
 ## Verification
 
-- [ ] [verify] All acceptance criteria from phase-04-context.md met
-- [ ] [verify] Gherkin scenario passes
+- [x] [verify] All acceptance criteria from phase-04-context.md met
+- [x] [verify] Gherkin scenario passes
 
 ---
 

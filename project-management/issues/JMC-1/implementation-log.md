@@ -460,3 +460,72 @@ M  src/test/scala/javadocsmcp/integration/EndToEndTest.scala
 ```
 
 ---
+
+## Phase 4: Fetch source code for Scala class (2025-12-29)
+
+**What was built:**
+
+- **Domain Layer:**
+  - `ClassName.scala` - Added `toScalaSourcePath()` method for `.scala` file paths
+  - Refactored path methods to use private `toPath(extension)` DRY helper
+  - Now supports: `toHtmlPath()` → `.html`, `toSourcePath()` → `.java`, `toScalaSourcePath()` → `.scala`
+
+- **Application Layer:**
+  - `SourceCodeService.scala` - Added extension fallback logic for Scala artifacts
+  - Tries `.scala` first, falls back to `.java` for mixed-source projects
+  - Java artifacts continue to use `.java` only (no change)
+
+**Decisions made:**
+
+- DRY refactoring: Extracted private `toPath(extension)` helper in `ClassName`
+- Elegant fallback using `orElse`: `readEntry(jar, scalaPath).orElse(readEntry(jar, javaPath))`
+- No infrastructure changes needed - `JarFileReader` already works for any file extension
+- No presentation changes needed - `get_source` tool already supports Scala coordinates from Phase 3
+
+**Patterns applied:**
+
+- **DRY:** Single `toPath()` method generates all path variants
+- **Functional Composition:** `orElse` for clean fallback logic
+- **Transparent Extension:** Service layer change minimal, domain logic handles extension
+
+**Testing:**
+
+- Unit tests: 5 new tests (ClassName + SourceCodeService fallback)
+- Integration tests: 2 new tests (cats-effect IO + ZIO real source)
+- E2E tests: 3 new tests (Scala source via MCP + error handling)
+- All tests passing
+
+**Code review:**
+
+- Iterations: 1
+- Review file: review-phase-04-20251229.md
+- Result: PASSED - 0 critical issues, 2 warnings, 7 suggestions
+- Warnings: Test duplication (kept for coverage confidence)
+- Positive feedback: Clean DRY refactoring, elegant `orElse` composition
+
+**For next phases:**
+
+- Available utilities:
+  - `ClassName.toScalaSourcePath()` - `.scala` file path generation
+  - `ClassName.toPath(extension)` - generic path helper (private)
+  - Extension fallback pattern in `SourceCodeService`
+- Extension points:
+  - Phase 5: Error handling when artifact missing
+  - Phase 6: Error handling when class missing in artifact
+  - Phase 7: Caching layer around services
+- Notes:
+  - Mixed Java/Scala projects supported via fallback
+  - Inner class stripping works for Scala too
+
+**Files changed:**
+
+```
+M  src/main/scala/javadocsmcp/application/SourceCodeService.scala
+M  src/main/scala/javadocsmcp/domain/ClassName.scala
+M  src/test/scala/javadocsmcp/application/SourceCodeServiceIntegrationTest.scala
+M  src/test/scala/javadocsmcp/application/SourceCodeServiceTest.scala
+M  src/test/scala/javadocsmcp/domain/ClassNameTest.scala
+M  src/test/scala/javadocsmcp/integration/EndToEndTest.scala
+```
+
+---

@@ -129,3 +129,52 @@ class SourceCodeServiceTest extends munit.FunSuite:
     service.getSource("org.typelevel::cats-effect:3.5.4", "cats.effect.IO", None)
 
     assertEquals(repository.lastSourcesScalaVersion, Some("3"))
+
+  test("fetch Scala source when .scala file exists"):
+    val jar = testJar
+    val scalaSource = "sealed abstract class IO[+A]"
+    val coords = ArtifactCoordinates("org.typelevel", "cats-effect", "3.5.4", scalaArtifact = true)
+    val repository = new InMemoryArtifactRepository(sourcesArtifacts = Map(coords -> jar))
+    val reader = InMemoryJarContentReader.withEntries(
+      (jar, "cats/effect/IO.scala") -> scalaSource
+    )
+    val service = SourceCodeService(repository, reader)
+
+    val result = service.getSource("org.typelevel::cats-effect:3.5.4", "cats.effect.IO")
+
+    assert(result.isRight, s"Should fetch .scala source but got: $result")
+    val sourceCode = result.toOption.get
+    assertEquals(sourceCode.sourceText, scalaSource)
+
+  test("fall back to .java for Scala artifact when .scala not found"):
+    val jar = testJar
+    val javaSource = "public interface IO { }"
+    val coords = ArtifactCoordinates("org.typelevel", "cats-effect", "3.5.4", scalaArtifact = true)
+    val repository = new InMemoryArtifactRepository(sourcesArtifacts = Map(coords -> jar))
+    // Only has .java file, not .scala
+    val reader = InMemoryJarContentReader.withEntries(
+      (jar, "cats/effect/IO.java") -> javaSource
+    )
+    val service = SourceCodeService(repository, reader)
+
+    val result = service.getSource("org.typelevel::cats-effect:3.5.4", "cats.effect.IO")
+
+    assert(result.isRight, s"Should fall back to .java source but got: $result")
+    val sourceCode = result.toOption.get
+    assertEquals(sourceCode.sourceText, javaSource)
+
+  test("Java artifact only tries .java extension"):
+    val jar = testJar
+    val javaSource = "public interface Logger { }"
+    val coords = slf4jCoords
+    val repository = InMemoryArtifactRepository.withSourcesJar(coords, jar)
+    val reader = InMemoryJarContentReader.withEntries(
+      (jar, "org/slf4j/Logger.java") -> javaSource
+    )
+    val service = SourceCodeService(repository, reader)
+
+    val result = service.getSource("org.slf4j:slf4j-api:2.0.9", "org.slf4j.Logger")
+
+    assert(result.isRight, s"Should fetch .java source but got: $result")
+    val sourceCode = result.toOption.get
+    assertEquals(sourceCode.sourceText, javaSource)
