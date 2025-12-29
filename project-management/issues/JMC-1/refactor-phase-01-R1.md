@@ -2,7 +2,7 @@
 
 **Phase:** 1
 **Created:** 2025-12-29
-**Status:** In Progress
+**Status:** Complete
 
 ## Decision Summary
 
@@ -88,20 +88,20 @@ trait DocumentationReader:
 
 ## Step 2: Create Test Implementations and Refactor Tests
 
-- [ ] [impl] Create `test/.../testkit/InMemoryArtifactRepository.scala`
-- [ ] [impl] Create `test/.../testkit/InMemoryDocumentationReader.scala`
-- [ ] [test] Create fresh instances in each test (remove shared mutable state)
-- [ ] [test] Refactor `DocumentationServiceTest` to use in-memory implementations
-- [ ] [test] Rename current integration tests or move to integration package
-- [ ] [test] Keep ONE integration test for real Maven Central verification
-- [ ] [verify] Run all tests, ensure behavior unchanged
-- [ ] [commit] Commit: "test(arch): add in-memory implementations for unit testing"
+- [x] [impl] Create `test/.../testkit/InMemoryArtifactRepository.scala`
+- [x] [impl] Create `test/.../testkit/InMemoryDocumentationReader.scala`
+- [x] [test] Create fresh instances in each test (remove shared mutable state)
+- [x] [test] Refactor `DocumentationServiceTest` to use in-memory implementations
+- [x] [test] Rename current integration tests or move to integration package
+- [x] [test] Keep ONE integration test for real Maven Central verification
+- [x] [verify] Run all tests, ensure behavior unchanged
+- [x] [commit] Commit: "test(arch): add in-memory implementations for unit testing"
 
 ## Verification
 
-- [ ] All existing tests pass unchanged
-- [ ] `DocumentationService` imports only from `domain.ports`, not `infrastructure`
-- [ ] Infrastructure classes implement port traits
-- [ ] New unit tests use in-memory implementations
-- [ ] At least one integration test verifies real Maven Central works
-- [ ] No regressions in functionality
+- [x] All existing tests pass unchanged
+- [x] `DocumentationService` imports only from `domain.ports`, not `infrastructure`
+- [x] Infrastructure classes implement port traits
+- [x] New unit tests use in-memory implementations
+- [x] At least one integration test verifies real Maven Central works
+- [x] No regressions in functionality

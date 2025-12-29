@@ -93,3 +93,58 @@ A  src/test/scala/javadocsmcp/infrastructure/JarFileReaderTest.scala
 ```
 
 ---
+
+## Refactoring R1: Extract Port Traits for Hexagonal Architecture (2025-12-29)
+
+**What was refactored:**
+
+- **Domain Ports:**
+  - Created `domain/ports/ArtifactRepository.scala` trait
+  - Created `domain/ports/DocumentationReader.scala` trait
+
+- **Infrastructure Updates:**
+  - `CoursierArtifactRepository` now extends `ArtifactRepository`
+  - `JarFileReader` now extends `DocumentationReader`
+
+- **Application Updates:**
+  - `DocumentationService` now depends on trait types, not concrete implementations
+  - Imports from `domain.ports`, not `infrastructure`
+
+- **Test Improvements:**
+  - Created `testkit/InMemoryArtifactRepository.scala` for unit testing
+  - Created `testkit/InMemoryDocumentationReader.scala` for unit testing
+  - Refactored `DocumentationServiceTest` to use in-memory implementations (true unit tests)
+  - Created `DocumentationServiceIntegrationTest` for real Maven Central verification
+
+**Why:**
+
+Code review identified that `DocumentationService` violated the Dependency Inversion Principle by depending directly on concrete infrastructure classes. This prevented proper unit testing and broke hexagonal architecture principles.
+
+**Impact:**
+
+- Unit tests now run without network calls or file I/O
+- `DocumentationService` can be tested in isolation
+- Infrastructure implementations can be swapped without changing application layer
+- One integration test still verifies real Maven Central works
+
+**Testing:**
+
+- Unit tests: 5 tests (with in-memory implementations)
+- Integration tests: 1 test (real Maven Central)
+- All existing tests continue to pass
+
+**Files changed:**
+
+```
+A  src/main/scala/javadocsmcp/domain/ports/ArtifactRepository.scala
+A  src/main/scala/javadocsmcp/domain/ports/DocumentationReader.scala
+M  src/main/scala/javadocsmcp/application/DocumentationService.scala
+M  src/main/scala/javadocsmcp/infrastructure/CoursierArtifactRepository.scala
+M  src/main/scala/javadocsmcp/infrastructure/JarFileReader.scala
+A  src/test/scala/javadocsmcp/testkit/InMemoryArtifactRepository.scala
+A  src/test/scala/javadocsmcp/testkit/InMemoryDocumentationReader.scala
+M  src/test/scala/javadocsmcp/application/DocumentationServiceTest.scala
+A  src/test/scala/javadocsmcp/application/DocumentationServiceIntegrationTest.scala
+```
+
+---
