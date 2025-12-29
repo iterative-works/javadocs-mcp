@@ -21,7 +21,14 @@ case class GetSourceInput(
 object ToolDefinitions {
   def getDocumentationTool(service: DocumentationService) = {
     val docTool = tool("get_documentation")
-      .description("Fetch Javadoc HTML documentation for a Java library class")
+      .description("""Fetch Javadoc/Scaladoc HTML documentation for a Java or Scala library class.
+
+For Java libraries, use ':' separator: groupId:artifactId:version
+For Scala libraries, use '::' separator: groupId::artifactId:version
+
+Examples:
+  Java:  org.slf4j:slf4j-api:2.0.9
+  Scala: org.typelevel::cats-effect:3.5.4""")
       .input[GetDocInput]
 
     docTool.handle { input =>
@@ -34,7 +41,14 @@ object ToolDefinitions {
 
   def getSourceTool(service: SourceCodeService) = {
     val sourceTool = tool("get_source")
-      .description("Fetch Java source code for a library class")
+      .description("""Fetch Java or Scala source code for a library class.
+
+For Java libraries, use ':' separator: groupId:artifactId:version
+For Scala libraries, use '::' separator: groupId::artifactId:version
+
+Examples:
+  Java:  org.slf4j:slf4j-api:2.0.9
+  Scala: org.typelevel::cats-effect:3.5.4""")
       .input[GetSourceInput]
 
     sourceTool.handle { input =>
