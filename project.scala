@@ -4,7 +4,14 @@
 //> using scala 3.3
 //> using jvm 21
 
-//> using dep "io.get-coursier::coursier:2.1.10"
+//> using dep "io.get-coursier:coursier_2.13:2.1.10"
+
+// MCP Server (Chimp)
+//> using dep "com.softwaremill.chimp::core:0.1.6"
+//> using dep "com.softwaremill.sttp.tapir::tapir-netty-server-sync:1.11.11"
+
+// Testing
+//> using test.dep "org.scalameta::munit:1.0.0"
 
 //> using option -Werror
 //> using option -Wunused:all
