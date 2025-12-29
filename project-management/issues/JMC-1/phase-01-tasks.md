@@ -22,7 +22,7 @@ This phase establishes the foundational vertical slice: MCP HTTP server → Cour
 - [x] [setup] Add Tapir Netty server dependency to `project.scala`
 - [x] [setup] Add MUnit test dependency to `project.scala`
 - [x] [setup] Create directory structure (`src/main/scala`, `src/test/scala`)
-- [ ] [setup] Verify `scala-cli compile .` works with new dependencies
+- [x] [setup] Verify `scala-cli compile .` works with new dependencies
 - [ ] [setup] Commit: "chore: add Chimp MCP and testing dependencies"
 
 ---
@@ -150,21 +150,21 @@ This phase establishes the foundational vertical slice: MCP HTTP server → Cour
 
 ### E2E Test Setup
 
-- [ ] [test] Create `EndToEndTest.scala` in test directory
-- [ ] [test] Write test that starts server on test port (e.g., 8888)
-- [ ] [test] Simulate MCP client request to `get_documentation` tool
-- [ ] [test] Use `GetDocInput(coordinates = "org.slf4j:slf4j-api:2.0.9", className = "org.slf4j.Logger")`
-- [ ] [impl] Run E2E test, debug any wiring issues
-- [ ] [test] Assert response is `Right(html)` where html contains "Logger" and "void info(String msg)"
-- [ ] [test] Assert response time is under 5 seconds
-- [ ] [impl] Add server cleanup in test (stop server after test)
+- [x] [test] Create `EndToEndTest.scala` in test directory
+- [x] [test] Write test that starts server on test port (e.g., 8888)
+- [x] [test] Simulate MCP client request to `get_documentation` tool
+- [x] [test] Use `GetDocInput(coordinates = "org.slf4j:slf4j-api:2.0.9", className = "org.slf4j.Logger")`
+- [x] [impl] Run E2E test, debug any wiring issues
+- [x] [test] Assert response is `Right(html)` where html contains "Logger" and "void info(String msg)"
+- [x] [test] Assert response time is under 5 seconds
+- [x] [impl] Add server cleanup in test (stop server after test)
 
 ### E2E Error Cases
 
-- [ ] [test] Write E2E test for non-existent artifact: expect error message "Artifact not found"
-- [ ] [impl] Verify error handling works end-to-end
-- [ ] [test] Write E2E test for non-existent class in valid artifact: expect "Class not found"
-- [ ] [impl] Ensure all error paths work correctly
+- [x] [test] Write E2E test for non-existent artifact: expect error message "Artifact not found"
+- [x] [impl] Verify error handling works end-to-end
+- [x] [test] Write E2E test for non-existent class in valid artifact: expect "Class not found"
+- [x] [impl] Ensure all error paths work correctly
 - [ ] [setup] Commit: "test: add E2E tests for get_documentation tool"
 
 ---

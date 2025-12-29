@@ -12,6 +12,8 @@
 
 // Testing
 //> using test.dep "org.scalameta::munit:1.0.0"
+//> using test.dep "com.softwaremill.sttp.client3::core:3.9.0"
+//> using test.dep "io.circe::circe-parser:0.14.6"
 
 //> using option -Werror
 //> using option -Wunused:all
