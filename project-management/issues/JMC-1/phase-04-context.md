@@ -235,3 +235,46 @@ Most infrastructure already exists from Phases 2 and 3:
 - Another popular Scala library
 - `zio.ZIO` as test class
 - Validates approach works across libraries
+
+---
+
+## Refactoring Decisions
+
+### R1: TASTy-based Scala source lookup (2025-12-29)
+
+**Trigger:** Code review discussion revealed that the filename-convention approach (`cats.effect.IO` → `cats/effect/IO.scala`) only works by luck. In Scala, unlike Java, a file `Utils.scala` can contain `class Foo`, `trait Bar`, `object Baz` - there's no compiler-enforced naming convention.
+
+**Decision:** Replace filename-convention-based lookup with TASTy-based source resolution for Scala 3 artifacts.
+
+**Rationale:**
+- TASTy files contain `sourceFile.path` with the original source file path
+- TASTy is the authoritative source of truth for Scala 3 symbol locations
+- tasty-query library provides clean API without requiring full compiler infrastructure
+
+**Scope:**
+- Files affected:
+  - NEW: `src/main/scala/javadocsmcp/infrastructure/TastySourceResolver.scala`
+  - NEW: `src/main/scala/javadocsmcp/domain/ports/SourcePathResolver.scala`
+  - MODIFY: `src/main/scala/javadocsmcp/application/SourceCodeService.scala`
+- Components: Infrastructure layer (new), Application layer (modified)
+- Boundaries: Keep existing `ClassName.toScalaSourcePath()` as fallback for Scala 2
+
+**Approach:**
+1. Fetch main JAR (contains `.tasty` files) in addition to sources JAR
+2. Use tasty-query to look up class symbol by fully qualified name
+3. Extract `sourceFile.path` from class definition position
+4. Map project-relative path to package-relative path for sources JAR lookup
+5. Fall back to filename convention if TASTy lookup fails (Scala 2 compatibility)
+
+**Algorithm:**
+```scala
+def extractPackageRelativePath(tastyPath: String, packageName: String): String =
+  val packagePath = packageName.replace('.', '/') + "/"
+  val idx = tastyPath.indexOf(packagePath)
+  if idx >= 0 then tastyPath.substring(idx)
+  else tastyPath.split('/').last  // fallback to filename
+```
+
+**Dependencies added:**
+- `ch.epfl.scala::tasty-query:1.6.1`
+- Scala version upgraded to 3.7.4 (required for tasty-query compatibility)
