@@ -41,4 +41,30 @@ class ClassNameTest extends munit.FunSuite {
 
     assert(result.isLeft, "Should reject whitespace-only string")
   }
+
+  test("convert class name to source path") {
+    val result = ClassName.parse("org.slf4j.Logger")
+
+    assert(result.isRight, "Should successfully parse valid class name")
+    val className = result.toOption.get
+    assertEquals(className.toSourcePath, "org/slf4j/Logger.java")
+  }
+
+  test("strip inner class suffix for source path") {
+    val result = ClassName.parse("org.slf4j.Logger$Factory")
+
+    assert(result.isRight, "Should successfully parse class with inner class suffix")
+    val className = result.toOption.get
+    assertEquals(className.toSourcePath, "org/slf4j/Logger.java",
+      "Should strip $Factory and use outer class for source path")
+  }
+
+  test("handle nested inner classes for source path") {
+    val result = ClassName.parse("com.example.Outer$Middle$Inner")
+
+    assert(result.isRight, "Should handle nested inner classes")
+    val className = result.toOption.get
+    assertEquals(className.toSourcePath, "com/example/Outer.java",
+      "Should use only the outermost class for source path")
+  }
 }

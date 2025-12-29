@@ -14,6 +14,15 @@ case class ClassName(fullyQualifiedName: String) {
     // Add HTML extension
     s"$path.html"
   }
+
+  def toSourcePath: String = {
+    // Strip inner class suffix (e.g., Logger$Factory -> Logger)
+    val outerClass = fullyQualifiedName.split('$').head
+    // Convert package separators to path separators
+    val path = outerClass.replace('.', '/')
+    // Add Java source extension
+    s"$path.java"
+  }
 }
 
 object ClassName {

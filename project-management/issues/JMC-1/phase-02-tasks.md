@@ -22,14 +22,14 @@ This phase builds on Phase 1's infrastructure to add source code fetching capabi
 
 ### Rename DocumentationReader to JarContentReader
 
-- [ ] [impl] Rename `domain/ports/DocumentationReader.scala` to `domain/ports/JarContentReader.scala`
-- [ ] [impl] Update trait name from `DocumentationReader` to `JarContentReader` inside file
-- [ ] [impl] Update `infrastructure/JarFileReader.scala` to implement `JarContentReader`
-- [ ] [impl] Update `application/DocumentationService.scala` constructor parameter type
-- [ ] [impl] Update `testkit/InMemoryDocumentationReader.scala` → rename to `InMemoryJarContentReader.scala`
-- [ ] [impl] Update test files that reference the old name
-- [ ] [test] Run all existing tests - ensure Phase 1 still works
-- [ ] [setup] Commit: "refactor: rename DocumentationReader to JarContentReader for clarity"
+- [x] [impl] Rename `domain/ports/DocumentationReader.scala` to `domain/ports/JarContentReader.scala`
+- [x] [impl] Update trait name from `DocumentationReader` to `JarContentReader` inside file
+- [x] [impl] Update `infrastructure/JarFileReader.scala` to implement `JarContentReader`
+- [x] [impl] Update `application/DocumentationService.scala` constructor parameter type
+- [x] [impl] Update `testkit/InMemoryDocumentationReader.scala` → rename to `InMemoryJarContentReader.scala`
+- [x] [impl] Update test files that reference the old name
+- [x] [test] Run all existing tests - ensure Phase 1 still works
+- [x] [setup] Commit: "refactor: rename DocumentationReader to JarContentReader for clarity"
 
 ---
 
