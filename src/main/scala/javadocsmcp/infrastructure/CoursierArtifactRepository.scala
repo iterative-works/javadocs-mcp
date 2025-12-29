@@ -5,11 +5,12 @@ package javadocsmcp.infrastructure
 
 import coursier.*
 import javadocsmcp.domain.{ArtifactCoordinates, DocumentationError}
+import javadocsmcp.domain.ports.ArtifactRepository
 import DocumentationError.*
 import java.io.File
 import scala.util.{Try, Success, Failure}
 
-class CoursierArtifactRepository {
+class CoursierArtifactRepository extends ArtifactRepository:
   def fetchJavadocJar(coords: ArtifactCoordinates): Either[DocumentationError, File] = {
     Try {
       val module = Module(
@@ -36,8 +37,6 @@ class CoursierArtifactRepository {
         Left(ArtifactNotFound(s"${coords.groupId}:${coords.artifactId}:${coords.version}"))
     }
   }
-}
 
-object CoursierArtifactRepository {
+object CoursierArtifactRepository:
   def apply(): CoursierArtifactRepository = new CoursierArtifactRepository()
-}

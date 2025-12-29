@@ -4,12 +4,12 @@
 package javadocsmcp.application
 
 import javadocsmcp.domain.{ArtifactCoordinates, ClassName, Documentation, DocumentationError}
-import javadocsmcp.infrastructure.{CoursierArtifactRepository, JarFileReader}
+import javadocsmcp.domain.ports.{ArtifactRepository, DocumentationReader}
 
 class DocumentationService(
-  repository: CoursierArtifactRepository,
-  reader: JarFileReader
-) {
+  repository: ArtifactRepository,
+  reader: DocumentationReader
+):
   def getDocumentation(coordinatesStr: String, classNameStr: String): Either[DocumentationError, Documentation] = {
     for {
       coords <- ArtifactCoordinates.parse(coordinatesStr)
@@ -18,9 +18,7 @@ class DocumentationService(
       htmlContent <- reader.readEntry(jarFile, className.toHtmlPath)
     } yield Documentation(htmlContent, className.fullyQualifiedName, coords)
   }
-}
 
-object DocumentationService {
-  def apply(repository: CoursierArtifactRepository, reader: JarFileReader): DocumentationService =
+object DocumentationService:
+  def apply(repository: ArtifactRepository, reader: DocumentationReader): DocumentationService =
     new DocumentationService(repository, reader)
-}
