@@ -2,7 +2,7 @@
 
 **Phase:** 3
 **Created:** 2025-12-29
-**Status:** Planned
+**Status:** Complete
 
 ## Decision Summary
 
@@ -94,63 +94,63 @@ case class GetSourceInput(
 
 ### Setup
 
-- [ ] [impl] Add `io.get-coursier::dependency:0.2.3` to `project.scala`
-- [ ] [impl] Verify compilation with new dependency
+- [x] [impl] Add `io.get-coursier::dependency:0.2.3` to `project.scala`
+- [x] [impl] Verify compilation with new dependency
 
 ### Infrastructure Refactoring
 
-- [ ] [test] Write test: resolve `org.typelevel::cats-effect:3.5.4` with scalaVersion="3" → `cats-effect_3`
-- [ ] [test] Write test: resolve `org.typelevel::cats-effect:3.5.4` with scalaVersion="2.13" → `cats-effect_2.13`
-- [ ] [test] Write test: Java coordinates unchanged regardless of scalaVersion
-- [ ] [impl] Update `CoursierArtifactRepository` to accept `scalaVersion` parameter
-- [ ] [impl] Replace `resolveArtifactName()` with `coursier/dependency` based resolution
-- [ ] [impl] Update `fetchJavadocJar()` signature to accept `scalaVersion: String = "3"`
-- [ ] [impl] Update `fetchSourcesJar()` signature to accept `scalaVersion: String = "3"`
-- [ ] [test] Run existing Coursier tests - verify they pass
+- [x] [test] Write test: resolve `org.typelevel::cats-effect:3.5.4` with scalaVersion="3" → `cats-effect_3`
+- [x] [test] Write test: resolve `org.typelevel::cats-effect:3.5.4` with scalaVersion="2.13" → `cats-effect_2.13`
+- [x] [test] Write test: Java coordinates unchanged regardless of scalaVersion
+- [x] [impl] Update `CoursierArtifactRepository` to accept `scalaVersion` parameter
+- [x] [impl] Replace `resolveArtifactName()` with `coursier/dependency` based resolution
+- [x] [impl] Update `fetchJavadocJar()` signature to accept `scalaVersion: String = "3"`
+- [x] [impl] Update `fetchSourcesJar()` signature to accept `scalaVersion: String = "3"`
+- [x] [test] Run existing Coursier tests - verify they pass
 
 ### Port Trait Updates
 
-- [ ] [impl] Update `ArtifactRepository` trait to include `scalaVersion` parameter in fetch methods
-- [ ] [impl] Update `InMemoryArtifactRepository` test implementation
-- [ ] [test] Run service tests - verify they pass
+- [x] [impl] Update `ArtifactRepository` trait to include `scalaVersion` parameter in fetch methods
+- [x] [impl] Update `InMemoryArtifactRepository` test implementation
+- [x] [test] Run service tests - verify they pass
 
 ### Application Layer Updates
 
-- [ ] [impl] Update `DocumentationService.getDocumentation()` to accept optional `scalaVersion`
-- [ ] [impl] Update `SourceCodeService.getSource()` to accept optional `scalaVersion`
-- [ ] [impl] Pass scalaVersion through to repository calls
-- [ ] [test] Run service tests - verify they pass
+- [x] [impl] Update `DocumentationService.getDocumentation()` to accept optional `scalaVersion`
+- [x] [impl] Update `SourceCodeService.getSource()` to accept optional `scalaVersion`
+- [x] [impl] Pass scalaVersion through to repository calls
+- [x] [test] Run service tests - verify they pass
 
 ### Presentation Layer Updates
 
-- [ ] [impl] Add `scalaVersion: Option[String] = None` to `GetDocInput`
-- [ ] [impl] Add `scalaVersion: Option[String] = None` to `GetSourceInput`
-- [ ] [impl] Update tool handlers to pass scalaVersion (default "3") to services
-- [ ] [impl] Update tool descriptions to document new parameter
-- [ ] [test] Run E2E tests - verify they pass
+- [x] [impl] Add `scalaVersion: Option[String] = None` to `GetDocInput`
+- [x] [impl] Add `scalaVersion: Option[String] = None` to `GetSourceInput`
+- [x] [impl] Update tool handlers to pass scalaVersion (default "3") to services
+- [x] [impl] Update tool descriptions to document new parameter
+- [x] [test] Run E2E tests - verify they pass
 
 ### New Tests
 
-- [ ] [test] E2E test: fetch Scala 2.13 artifact docs with explicit scalaVersion="2.13"
-- [ ] [test] E2E test: fetch Scala 3 artifact docs with default scalaVersion
-- [ ] [test] E2E test: explicit suffix coordinate works without scalaVersion parameter
+- [x] [test] E2E test: fetch Scala 2.13 artifact docs with explicit scalaVersion="2.13"
+- [x] [test] E2E test: fetch Scala 3 artifact docs with default scalaVersion
+- [x] [test] E2E test: explicit suffix coordinate works without scalaVersion parameter
 
 ### Cleanup
 
-- [ ] [impl] Remove any dead code from old implementation
-- [ ] [impl] Update comments to reflect new approach
-- [ ] [impl] Update implementation-log.md with refactoring summary
+- [x] [impl] Remove any dead code from old implementation
+- [x] [impl] Update comments to reflect new approach
+- [x] [impl] Update implementation-log.md with refactoring summary
 
 ## Verification
 
-- [ ] All 46+ existing tests pass
-- [ ] New scalaVersion tests pass
-- [ ] Can fetch `org.typelevel::cats-effect:3.5.4` (Scala 3, default)
-- [ ] Can fetch Scala 2.13 artifact with `scalaVersion: "2.13"`
-- [ ] Explicit suffix `org.typelevel:cats-effect_2.13:3.5.4` still works
-- [ ] Java artifacts unaffected
-- [ ] No compiler warnings
-- [ ] Test output pristine
+- [x] All 46+ existing tests pass (56 total now)
+- [x] New scalaVersion tests pass
+- [x] Can fetch `org.typelevel::cats-effect:3.5.4` (Scala 3, default)
+- [x] Can fetch Scala 2.13 artifact with `scalaVersion: "2.13"`
+- [x] Explicit suffix `org.typelevel:cats-effect_2.13:3.5.4` still works
+- [x] Java artifacts unaffected
+- [x] No compiler warnings
+- [x] Test output pristine
 
 ## Notes
 

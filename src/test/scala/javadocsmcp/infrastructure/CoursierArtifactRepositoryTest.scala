@@ -106,4 +106,42 @@ class CoursierArtifactRepositoryTest extends munit.FunSuite {
     val jarFile = result.toOption.get
     assert(jarFile.exists(), "Downloaded sources JAR file should exist")
   }
+
+  test("resolve org.typelevel::cats-effect:3.5.4 with scalaVersion=3 to cats-effect_3") {
+    val coords = ArtifactCoordinates(
+      groupId = "org.typelevel",
+      artifactId = "cats-effect",
+      version = "3.5.4",
+      scalaArtifact = true
+    )
+    val result = repository.fetchJavadocJar(coords, scalaVersion = "3")
+
+    assert(result.isRight, "Should successfully fetch cats-effect with Scala 3")
+    val jarFile = result.toOption.get
+    assert(jarFile.getName.contains("_3"), "JAR filename should contain _3 suffix")
+  }
+
+  test("resolve org.typelevel::cats-effect:3.5.4 with scalaVersion=2.13 to cats-effect_2.13") {
+    val coords = ArtifactCoordinates(
+      groupId = "org.typelevel",
+      artifactId = "cats-effect",
+      version = "3.5.4",
+      scalaArtifact = true
+    )
+    val result = repository.fetchJavadocJar(coords, scalaVersion = "2.13")
+
+    assert(result.isRight, "Should successfully fetch cats-effect with Scala 2.13")
+    val jarFile = result.toOption.get
+    assert(jarFile.getName.contains("_2.13"), "JAR filename should contain _2.13 suffix")
+  }
+
+  test("Java coordinates unchanged regardless of scalaVersion") {
+    val coords = ArtifactCoordinates("org.slf4j", "slf4j-api", "2.0.9")
+    val result = repository.fetchJavadocJar(coords, scalaVersion = "2.13")
+
+    assert(result.isRight, "Should successfully fetch slf4j regardless of scalaVersion")
+    val jarFile = result.toOption.get
+    assert(!jarFile.getName.contains("_2.13"), "JAR filename should not contain Scala suffix for Java artifact")
+    assert(!jarFile.getName.contains("_3"), "JAR filename should not contain Scala suffix for Java artifact")
+  }
 }

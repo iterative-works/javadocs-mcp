@@ -5,6 +5,7 @@
 //> using jvm 21
 
 //> using dep "io.get-coursier:coursier_2.13:2.1.10"
+//> using dep "io.get-coursier::dependency:0.2.3"
 
 // MCP Server (Chimp)
 //> using dep "com.softwaremill.chimp::core:0.1.6"

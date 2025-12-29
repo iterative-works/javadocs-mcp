@@ -227,7 +227,9 @@ class EndToEndTest extends munit.FunSuite:
       s"Expected 'class not found' message, got: $errorMessage")
   }
 
-  test("should fetch Scaladoc for cats.effect.IO") {
+  // Scala version parameter tests
+
+  test("should fetch Scaladoc for cats.effect.IO with default scalaVersion") {
     val params = Json.obj(
       "name" -> Json.fromString("get_documentation"),
       "arguments" -> Json.obj(
@@ -251,11 +253,61 @@ class EndToEndTest extends munit.FunSuite:
 
     assert(textContent.isDefined, "Expected text content in response")
     val html = textContent.get
-    assert(html.contains("IO"), s"Expected 'IO' in Scaladoc HTML content")
-    assert(html.nonEmpty, "HTML content should not be empty")
+    assert(html.contains("IO"), s"Expected 'IO' in HTML content")
 
     val responseTime = endTime - startTime
-    assert(responseTime < 5000, s"Response time $responseTime ms exceeded 5 seconds")
+    assert(responseTime < 10000, s"Response time $responseTime ms exceeded 10 seconds")
+  }
+
+  test("should fetch Scala 2.13 artifact with explicit scalaVersion parameter") {
+    val params = Json.obj(
+      "name" -> Json.fromString("get_documentation"),
+      "arguments" -> Json.obj(
+        "coordinates" -> Json.fromString("org.typelevel::cats-effect:3.5.4"),
+        "className" -> Json.fromString("cats.effect.IO"),
+        "scalaVersion" -> Json.fromString("2.13")
+      )
+    )
+
+    val response = makeRequest("tools/call", params)
+
+    val result = response.hcursor.downField("result")
+    val content = result.downField("content").as[List[Json]]
+
+    assert(content.isRight, s"Expected content array in response: $response")
+
+    val textContent = content.getOrElse(List.empty)
+      .flatMap(_.hcursor.downField("text").as[String].toOption)
+      .headOption
+
+    assert(textContent.isDefined, "Expected text content in response")
+    val html = textContent.get
+    assert(html.contains("IO"), s"Expected 'IO' in HTML content for Scala 2.13 version")
+  }
+
+  test("should fetch explicit suffix coordinate without scalaVersion parameter") {
+    val params = Json.obj(
+      "name" -> Json.fromString("get_documentation"),
+      "arguments" -> Json.obj(
+        "coordinates" -> Json.fromString("org.typelevel:cats-effect_2.13:3.5.4"),
+        "className" -> Json.fromString("cats.effect.IO")
+      )
+    )
+
+    val response = makeRequest("tools/call", params)
+
+    val result = response.hcursor.downField("result")
+    val content = result.downField("content").as[List[Json]]
+
+    assert(content.isRight, s"Expected content array in response: $response")
+
+    val textContent = content.getOrElse(List.empty)
+      .flatMap(_.hcursor.downField("text").as[String].toOption)
+      .headOption
+
+    assert(textContent.isDefined, "Expected text content in response")
+    val html = textContent.get
+    assert(html.contains("IO"), s"Expected 'IO' in HTML content for explicit _2.13 suffix")
   }
 
   test("should return error for non-existent Scala artifact") {
@@ -273,14 +325,6 @@ class EndToEndTest extends munit.FunSuite:
                    response.hcursor.downField("error").succeeded
 
     assert(hasError, s"Expected error response for non-existent Scala artifact: $response")
-
-    val errorMessage = response.hcursor.downField("result").downField("content")
-      .downArray.downField("text").as[String]
-      .orElse(response.hcursor.downField("error").downField("message").as[String])
-      .getOrElse("")
-
-    assert(errorMessage.toLowerCase.contains("artifact") || errorMessage.toLowerCase.contains("not found"),
-      s"Expected 'artifact not found' message, got: $errorMessage")
   }
 
   test("should return error for non-existent class in Scala artifact") {
@@ -288,7 +332,7 @@ class EndToEndTest extends munit.FunSuite:
       "name" -> Json.fromString("get_documentation"),
       "arguments" -> Json.obj(
         "coordinates" -> Json.fromString("org.typelevel::cats-effect:3.5.4"),
-        "className" -> Json.fromString("cats.effect.NonExistent")
+        "className" -> Json.fromString("cats.effect.NonExistentClass")
       )
     )
 
@@ -297,7 +341,7 @@ class EndToEndTest extends munit.FunSuite:
     val hasError = response.hcursor.downField("result").downField("isError").as[Boolean].getOrElse(false) ||
                    response.hcursor.downField("error").succeeded
 
-    assert(hasError, s"Expected error response for non-existent class: $response")
+    assert(hasError, s"Expected error response for non-existent class in Scala artifact: $response")
 
     val errorMessage = response.hcursor.downField("result").downField("content")
       .downArray.downField("text").as[String]

@@ -6,23 +6,36 @@ package javadocsmcp.testkit
 import javadocsmcp.domain.{ArtifactCoordinates, DocumentationError}
 import javadocsmcp.domain.ports.ArtifactRepository
 import java.io.File
+import scala.collection.mutable
 
 class InMemoryArtifactRepository(
   javadocArtifacts: Map[ArtifactCoordinates, File] = Map.empty,
   sourcesArtifacts: Map[ArtifactCoordinates, File] = Map.empty
 ) extends ArtifactRepository:
 
-  def fetchJavadocJar(coords: ArtifactCoordinates): Either[DocumentationError, File] =
+  // Captures scalaVersion parameters for test verification
+  private val javadocScalaVersionCalls: mutable.ListBuffer[String] = mutable.ListBuffer.empty
+  private val sourcesScalaVersionCalls: mutable.ListBuffer[String] = mutable.ListBuffer.empty
+
+  def fetchJavadocJar(coords: ArtifactCoordinates, scalaVersion: String = "3"): Either[DocumentationError, File] =
+    javadocScalaVersionCalls += scalaVersion
     javadocArtifacts.get(coords) match
       case Some(file) => Right(file)
       case None => Left(DocumentationError.ArtifactNotFound(
         s"${coords.groupId}:${coords.artifactId}:${coords.version}"))
 
-  def fetchSourcesJar(coords: ArtifactCoordinates): Either[DocumentationError, File] =
+  def fetchSourcesJar(coords: ArtifactCoordinates, scalaVersion: String = "3"): Either[DocumentationError, File] =
+    sourcesScalaVersionCalls += scalaVersion
     sourcesArtifacts.get(coords) match
       case Some(file) => Right(file)
       case None => Left(DocumentationError.SourcesNotAvailable(
         s"${coords.groupId}:${coords.artifactId}:${coords.version}"))
+
+  // Test inspection methods
+  def lastJavadocScalaVersion: Option[String] = javadocScalaVersionCalls.lastOption
+  def lastSourcesScalaVersion: Option[String] = sourcesScalaVersionCalls.lastOption
+  def allJavadocScalaVersionCalls: List[String] = javadocScalaVersionCalls.toList
+  def allSourcesScalaVersionCalls: List[String] = sourcesScalaVersionCalls.toList
 
 object InMemoryArtifactRepository:
   def empty: InMemoryArtifactRepository = new InMemoryArtifactRepository()

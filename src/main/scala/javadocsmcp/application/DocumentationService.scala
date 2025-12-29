@@ -10,11 +10,16 @@ class DocumentationService(
   repository: ArtifactRepository,
   reader: JarContentReader
 ):
-  def getDocumentation(coordinatesStr: String, classNameStr: String): Either[DocumentationError, Documentation] = {
+  def getDocumentation(
+    coordinatesStr: String,
+    classNameStr: String,
+    scalaVersion: Option[String] = None
+  ): Either[DocumentationError, Documentation] = {
+    val effectiveScalaVersion = scalaVersion.getOrElse("3")
     for {
       coords <- ArtifactCoordinates.parse(coordinatesStr)
       className <- ClassName.parse(classNameStr)
-      jarFile <- repository.fetchJavadocJar(coords)
+      jarFile <- repository.fetchJavadocJar(coords, effectiveScalaVersion)
       htmlContent <- reader.readEntry(jarFile, className.toHtmlPath)
     } yield Documentation(htmlContent, className.fullyQualifiedName, coords)
   }

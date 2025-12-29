@@ -203,7 +203,7 @@ This phase extends the existing `get_documentation` tool to support Scala librar
 
 ## Refactoring Tasks
 
-- [ ] [impl] [ ] [reviewed] Refactoring R1: Replace hardcoded Scala suffix with coursier/dependency library
+- [x] [impl] [x] [reviewed] Refactoring R1: Replace hardcoded Scala suffix with coursier/dependency library
 
 ---
 

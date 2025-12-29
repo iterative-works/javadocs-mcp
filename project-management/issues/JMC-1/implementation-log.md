@@ -376,3 +376,87 @@ M  src/test/scala/javadocsmcp/integration/EndToEndTest.scala
 ```
 
 ---
+
+### Refactoring R1: Replace hardcoded Scala suffix with coursier/dependency library (2025-12-29)
+
+**Trigger:** Code review identified that the hardcoded `_3` suffix in `CoursierArtifactRepository.resolveArtifactName()` is inflexible - it only supports Scala 3 artifacts and provides no way for users to fetch Scala 2.13 library documentation.
+
+**What changed:**
+
+- **Dependencies:**
+  - Added `io.get-coursier::dependency:0.2.3` library for proper Scala coordinate resolution
+
+- **Infrastructure Layer:**
+  - `CoursierArtifactRepository.scala` - Replaced `resolveArtifactName()` with `resolveArtifact()` using `DependencyParser` and `ScalaParameters.applyParams()`
+  - Added `scalaVersion: String = "3"` parameter to `fetchJavadocJar()` and `fetchSourcesJar()`
+
+- **Port Trait:**
+  - `ArtifactRepository.scala` - Added `scalaVersion` parameter to fetch method signatures
+
+- **Application Layer:**
+  - `DocumentationService.scala` - Added `scalaVersion: Option[String] = None` parameter, defaults to "3"
+  - `SourceCodeService.scala` - Added `scalaVersion: Option[String] = None` parameter, defaults to "3"
+
+- **Presentation Layer:**
+  - `GetDocInput` and `GetSourceInput` - Added `scalaVersion: Option[String] = None` field
+  - Tool descriptions updated to document the new parameter
+
+- **Test Infrastructure:**
+  - `InMemoryArtifactRepository` - Added scalaVersion call capture for test verification
+
+**Before → After:**
+
+```scala
+// Before: hardcoded _3 suffix
+private def resolveArtifactName(coords: ArtifactCoordinates): String =
+  if coords.scalaArtifact then s"${coords.artifactId}_3"
+  else coords.artifactId
+
+// After: coursier/dependency library resolves correctly
+private def resolveArtifact(coords: ArtifactCoordinates, scalaVersion: String): (String, String, String) =
+  if coords.scalaArtifact then
+    val dep = DependencyParser.parse(s"${coords.groupId}::${coords.artifactId}:${coords.version}")
+    val resolved = dep.toOption.get.applyParams(ScalaParameters(scalaVersion))
+    (resolved.module.organization, resolved.module.name, resolved.version)
+  else
+    (coords.groupId, coords.artifactId, coords.version)
+```
+
+**Benefits:**
+
+- Can now fetch Scala 2.13 documentation with `scalaVersion="2.13"`
+- Can now fetch Scala 2.12 documentation with `scalaVersion="2.12"`
+- Defaults to Scala 3 (`_3` suffix) for backward compatibility
+- Explicit suffix escape hatch: `org.typelevel:cats-effect_2.13:3.5.4` bypasses resolution
+
+**Testing:**
+
+- Unit tests: 6 new tests for scalaVersion parameter passing
+- Integration tests: 3 new tests for Scala version resolution
+- E2E tests: 5 new tests for scalaVersion parameter via MCP
+- Total: 56 tests passing (up from 46)
+
+**Code review:**
+
+- Iterations: 1
+- Review file: review-refactor-03-R1-20251229.md
+- Critical issues found: 3 (missing tests for scalaVersion)
+- All critical issues fixed
+
+**Files changed:**
+
+```
+M  project.scala
+M  src/main/scala/javadocsmcp/domain/ports/ArtifactRepository.scala
+M  src/main/scala/javadocsmcp/infrastructure/CoursierArtifactRepository.scala
+M  src/main/scala/javadocsmcp/application/DocumentationService.scala
+M  src/main/scala/javadocsmcp/application/SourceCodeService.scala
+M  src/main/scala/javadocsmcp/presentation/ToolDefinitions.scala
+M  src/test/scala/javadocsmcp/testkit/InMemoryArtifactRepository.scala
+M  src/test/scala/javadocsmcp/application/DocumentationServiceTest.scala
+M  src/test/scala/javadocsmcp/application/SourceCodeServiceTest.scala
+M  src/test/scala/javadocsmcp/infrastructure/CoursierArtifactRepositoryTest.scala
+M  src/test/scala/javadocsmcp/integration/EndToEndTest.scala
+```
+
+---

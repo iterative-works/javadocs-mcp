@@ -10,11 +10,16 @@ class SourceCodeService(
   repository: ArtifactRepository,
   reader: JarContentReader
 ):
-  def getSource(coordinatesStr: String, classNameStr: String): Either[DocumentationError, SourceCode] = {
+  def getSource(
+    coordinatesStr: String,
+    classNameStr: String,
+    scalaVersion: Option[String] = None
+  ): Either[DocumentationError, SourceCode] = {
+    val effectiveScalaVersion = scalaVersion.getOrElse("3")
     for {
       coords <- ArtifactCoordinates.parse(coordinatesStr)
       className <- ClassName.parse(classNameStr)
-      sourcesJar <- repository.fetchSourcesJar(coords)
+      sourcesJar <- repository.fetchSourcesJar(coords, effectiveScalaVersion)
       sourceText <- reader.readEntry(sourcesJar, className.toSourcePath)
     } yield SourceCode(sourceText, className, coords)
   }
