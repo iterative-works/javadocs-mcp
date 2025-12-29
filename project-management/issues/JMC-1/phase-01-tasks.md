@@ -246,7 +246,7 @@ Before marking Phase 1 complete, verify ALL criteria:
 - [x] Changes committed incrementally (not one giant commit)
 - [x] Commit messages follow TDD pattern: "test: add X", "feat: implement X"
 - [x] Pre-commit hooks run successfully (no `--no-verify`)
-- [ ] Working directory clean (no uncommitted changes)
+- [x] Working directory clean (no uncommitted changes)
 
 ---
 
