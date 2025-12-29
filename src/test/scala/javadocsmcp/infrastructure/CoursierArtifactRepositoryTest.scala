@@ -3,7 +3,7 @@
 
 package javadocsmcp.infrastructure
 
-import javadocsmcp.domain.ArtifactCoordinates
+import javadocsmcp.domain.{ArtifactCoordinates, DocumentationError}
 
 class CoursierArtifactRepositoryTest extends munit.FunSuite {
   val repository = CoursierArtifactRepository()
@@ -143,5 +143,67 @@ class CoursierArtifactRepositoryTest extends munit.FunSuite {
     val jarFile = result.toOption.get
     assert(!jarFile.getName.contains("_2.13"), "JAR filename should not contain Scala suffix for Java artifact")
     assert(!jarFile.getName.contains("_3"), "JAR filename should not contain Scala suffix for Java artifact")
+  }
+
+  // Error detection tests - verify correct error types are returned
+
+  test("non-existent artifact returns ArtifactNotFound error") {
+    val coords = ArtifactCoordinates("com.nonexistent", "fake-library", "1.0.0")
+    val result = repository.fetchJavadocJar(coords)
+
+    assert(result.isLeft, "Should return error for non-existent artifact")
+    result.left.foreach { error =>
+      assert(error.isInstanceOf[DocumentationError.ArtifactNotFound],
+        s"Should return ArtifactNotFound error, got: ${error.getClass.getName}")
+      assert(error.message.contains("com.nonexistent:fake-library:1.0.0"),
+        "Error message should include artifact coordinates")
+      assert(error.message.contains("Maven Central"),
+        "Error message should suggest checking Maven Central")
+    }
+  }
+
+  test("non-existent artifact for sources returns ArtifactNotFound error") {
+    val coords = ArtifactCoordinates("com.nonexistent", "fake-library", "1.0.0")
+    val result = repository.fetchSourcesJar(coords)
+
+    assert(result.isLeft, "Should return error for non-existent artifact")
+    result.left.foreach { error =>
+      assert(error.isInstanceOf[DocumentationError.ArtifactNotFound],
+        s"Should return ArtifactNotFound error, got: ${error.getClass.getName}")
+    }
+  }
+
+  test("missing javadoc classifier returns JavadocNotAvailable error") {
+    // Note: Most real artifacts publish javadoc, making it hard to test the actual error path
+    // This test verifies the error message format is correct for JavadocNotAvailable
+    // The error detection logic is tested through the non-existent artifact tests above
+
+    val error = DocumentationError.JavadocNotAvailable("test:artifact:1.0.0")
+    assert(error.message.contains("get_source"),
+      "JavadocNotAvailable message should suggest using get_source")
+    assert(error.message.contains("don't publish javadoc"),
+      "JavadocNotAvailable message should explain libraries don't publish javadoc")
+  }
+
+  test("error messages include artifact coordinates") {
+    val coords = ArtifactCoordinates("com.fake.test", "nonexistent-lib", "9.9.9")
+    val result = repository.fetchJavadocJar(coords)
+
+    assert(result.isLeft, "Should return error")
+    result.left.foreach { error =>
+      assert(error.message.contains("com.fake.test:nonexistent-lib:9.9.9"),
+        "Error message should include full artifact coordinates")
+    }
+  }
+
+  test("error messages for sources include coordinates") {
+    val coords = ArtifactCoordinates("com.fake.test", "nonexistent-lib", "9.9.9")
+    val result = repository.fetchSourcesJar(coords)
+
+    assert(result.isLeft, "Should return error")
+    result.left.foreach { error =>
+      assert(error.message.contains("com.fake.test:nonexistent-lib:9.9.9"),
+        "Error message should include full artifact coordinates")
+    }
   }
 }

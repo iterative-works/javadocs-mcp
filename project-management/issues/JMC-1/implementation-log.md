@@ -599,3 +599,75 @@ M  src/main/scala/javadocsmcp/presentation/McpServer.scala (fixed unused import)
 ```
 
 ---
+
+## Phase 5: Handle missing artifacts gracefully (2025-12-29)
+
+**What was built:**
+
+- **Domain Layer:**
+  - `Errors.scala` - Added `JavadocNotAvailable` error type for classifier-specific errors
+  - Enhanced all error messages with multi-line, user-friendly format:
+    - `ArtifactNotFound`: Maven Central URL, spelling suggestions, version check hints
+    - `JavadocNotAvailable`: Suggests `get_source` as alternative
+    - `SourcesNotAvailable`: Suggests `get_documentation` as alternative
+    - `ClassNotFound`: Capitalization hints, dependency verification
+    - `InvalidCoordinates`: Java (`:`) and Scala (`::`) format examples
+    - `InvalidClassName`: Fully qualified format example
+
+- **Infrastructure Layer:**
+  - `CoursierArtifactRepository.scala` - Improved error detection:
+    - `coursier.error.ResolutionError` → `ArtifactNotFound` (artifact doesn't exist)
+    - Other exceptions → Classifier-specific error (`JavadocNotAvailable`, `SourcesNotAvailable`)
+  - Updated `fetchJavadocJar()` to return `JavadocNotAvailable` instead of `ArtifactNotFound`
+
+**Decisions made:**
+
+- Multi-line error messages with `.stripMargin` for readability
+- Distinguish error types to give actionable guidance (suggest alternative tool)
+- Preserve existing behavior - errors still propagate via `Either[DocumentationError, T]`
+- Research identified Coursier exception types: `ResolutionError` vs `FetchError`
+
+**Patterns applied:**
+
+- **Enhanced Value Messaging:** Each error case provides specific, actionable guidance
+- **Exception Type Mapping:** Infrastructure translates external exceptions to domain errors
+- **Functional Error Handling:** `Either` monads propagate errors through layers
+
+**Testing:**
+
+- Unit tests: 16 new tests (error message content verification)
+- Integration tests: 5 new tests (Coursier error type mapping)
+- E2E tests: 3 new tests (MCP error responses, server stability)
+- Total: 24 new tests, all passing
+
+**Code review:**
+
+- Iterations: 1
+- Review file: review-phase-05-20251229.md
+- Result: PASSED - 0 critical issues, 3 warnings, 7 suggestions
+- Warnings: Wildcard import (style), test name accuracy, test gap documentation
+- Positive: Exemplary Scala 3 enum usage, clear error messages
+
+**For next phases:**
+
+- Available utilities:
+  - Enhanced error messages provide debugging guidance
+  - Error type distinction enables targeted recovery suggestions
+- Extension points:
+  - Phase 6: Class-level error handling with suggestions
+  - Phase 7: Cache error responses (shorter TTL than successes)
+- Notes:
+  - Can't easily test `JavadocNotAvailable` path (most artifacts publish javadoc)
+  - Server remains stable after error responses (verified by E2E tests)
+
+**Files changed:**
+
+```
+M  src/main/scala/javadocsmcp/domain/Errors.scala
+M  src/main/scala/javadocsmcp/infrastructure/CoursierArtifactRepository.scala
+A  src/test/scala/javadocsmcp/domain/ErrorsTest.scala
+M  src/test/scala/javadocsmcp/infrastructure/CoursierArtifactRepositoryTest.scala
+M  src/test/scala/javadocsmcp/integration/EndToEndTest.scala
+```
+
+---

@@ -197,8 +197,9 @@ class EndToEndTest extends munit.FunSuite:
       .orElse(response.hcursor.downField("error").downField("message").as[String])
       .getOrElse("")
 
-    assert(errorMessage.toLowerCase.contains("sources") || errorMessage.toLowerCase.contains("not available"),
-      s"Expected 'sources not available' message, got: $errorMessage")
+    // Since the artifact doesn't exist, we expect "Artifact not found" error
+    assert(errorMessage.toLowerCase.contains("artifact") || errorMessage.toLowerCase.contains("not found"),
+      s"Expected error message for non-existent artifact, got: $errorMessage")
   }
 
   test("should return error for non-existent class in sources JAR") {
@@ -436,4 +437,89 @@ class EndToEndTest extends munit.FunSuite:
 
     assert(errorMessage.toLowerCase.contains("class") || errorMessage.toLowerCase.contains("not found"),
       s"Expected 'class not found' message, got: $errorMessage")
+  }
+
+  // Enhanced error message tests - verify Phase 5 improvements
+
+  test("artifact not found error includes Maven Central suggestion") {
+    val params = Json.obj(
+      "name" -> Json.fromString("get_documentation"),
+      "arguments" -> Json.obj(
+        "coordinates" -> Json.fromString("com.nonexistent:fake-library:1.0.0"),
+        "className" -> Json.fromString("com.fake.FakeClass")
+      )
+    )
+
+    val response = makeRequest("tools/call", params)
+
+    val hasError = response.hcursor.downField("result").downField("isError").as[Boolean].getOrElse(false)
+    assert(hasError, s"Expected error response: $response")
+
+    val errorMessage = response.hcursor.downField("result").downField("content")
+      .downArray.downField("text").as[String]
+      .getOrElse("")
+
+    assert(errorMessage.contains("com.nonexistent:fake-library:1.0.0"),
+      s"Error message should include artifact coordinates")
+    assert(errorMessage.contains("Maven Central") || errorMessage.contains("maven.org"),
+      s"Error message should suggest checking Maven Central: $errorMessage")
+    assert(errorMessage.contains("spelling") || errorMessage.contains("Spelling"),
+      s"Error message should suggest checking spelling: $errorMessage")
+  }
+
+  test("artifact not found error is multi-line and helpful") {
+    val params = Json.obj(
+      "name" -> Json.fromString("get_source"),
+      "arguments" -> Json.obj(
+        "coordinates" -> Json.fromString("com.fake.test:nonexistent:9.9.9"),
+        "className" -> Json.fromString("com.fake.Class")
+      )
+    )
+
+    val response = makeRequest("tools/call", params)
+
+    val errorMessage = response.hcursor.downField("result").downField("content")
+      .downArray.downField("text").as[String]
+      .getOrElse("")
+
+    // Verify multi-line format
+    assert(errorMessage.contains("\n") || errorMessage.contains("\\n"),
+      s"Error message should be multi-line formatted: $errorMessage")
+    assert(errorMessage.contains("Please check"),
+      s"Error message should include suggestions: $errorMessage")
+  }
+
+  test("server remains stable after error responses") {
+    // Trigger an error
+    val errorParams = Json.obj(
+      "name" -> Json.fromString("get_documentation"),
+      "arguments" -> Json.obj(
+        "coordinates" -> Json.fromString("com.error:test:1.0.0"),
+        "className" -> Json.fromString("com.error.Test")
+      )
+    )
+
+    val errorResponse = makeRequest("tools/call", errorParams)
+    assert(errorResponse.hcursor.downField("result").downField("isError").as[Boolean].getOrElse(false),
+      "First request should return error")
+
+    // Immediately make a valid request
+    val validParams = Json.obj(
+      "name" -> Json.fromString("get_documentation"),
+      "arguments" -> Json.obj(
+        "coordinates" -> Json.fromString("org.slf4j:slf4j-api:2.0.9"),
+        "className" -> Json.fromString("org.slf4j.Logger")
+      )
+    )
+
+    val validResponse = makeRequest("tools/call", validParams)
+    val content = validResponse.hcursor.downField("result").downField("content").as[List[Json]]
+
+    assert(content.isRight, s"Server should handle valid request after error: $validResponse")
+    val textContent = content.getOrElse(List.empty)
+      .flatMap(_.hcursor.downField("text").as[String].toOption)
+      .headOption
+
+    assert(textContent.isDefined, "Valid request should return content")
+    assert(textContent.get.contains("Logger"), "Valid request should return Logger documentation")
   }
