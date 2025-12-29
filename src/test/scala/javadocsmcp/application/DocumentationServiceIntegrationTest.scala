@@ -23,3 +23,24 @@ class DocumentationServiceIntegrationTest extends munit.FunSuite:
     assertEquals(doc.className, "org.slf4j.Logger")
     assert(doc.htmlContent.contains("Logger"), "HTML should contain Logger")
     assert(doc.htmlContent.contains("interface"), "Logger is an interface")
+
+  test("fetch Scaladoc for cats.effect.IO"):
+    val service = createService()
+
+    val result = service.getDocumentation("org.typelevel::cats-effect:3.5.4", "cats.effect.IO")
+
+    assert(result.isRight, s"Should successfully fetch IO Scaladoc: $result")
+    val doc = result.toOption.get
+    assertEquals(doc.className, "cats.effect.IO")
+    assert(doc.htmlContent.contains("IO"), "HTML should contain IO class documentation")
+    assert(doc.htmlContent.nonEmpty, "HTML content should not be empty")
+
+  test("fetch Scaladoc for zio.ZIO"):
+    val service = createService()
+
+    val result = service.getDocumentation("dev.zio::zio:2.0.21", "zio.ZIO")
+
+    assert(result.isRight, s"Should successfully fetch ZIO Scaladoc: $result")
+    val doc = result.toOption.get
+    assertEquals(doc.className, "zio.ZIO")
+    assert(doc.htmlContent.contains("ZIO"), "HTML should contain ZIO class documentation")

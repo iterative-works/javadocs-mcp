@@ -70,27 +70,27 @@ This phase extends the existing `get_documentation` tool to support Scala librar
 
 ### Update CoursierArtifactRepository for Scala
 
-- [ ] [test] Write failing integration test: fetch Scaladoc JAR for `"org.typelevel::cats-effect:3.5.4"`
-- [ ] [impl] Open `CoursierArtifactRepository.scala`
-- [ ] [impl] Update `fetchJavadocJar()` to handle `scalaArtifact` field
-- [ ] [impl] Based on Phase 3.1 research: Construct Scala Module appropriately
-- [ ] [impl] Option A (if Coursier handles `::` automatically): Pass coordinates with `::`
-- [ ] [impl] Option B (if manual): Append Scala version suffix to artifactId
-- [ ] [impl] Keep `Classifier("javadoc")` unchanged (Scaladoc uses same classifier)
-- [ ] [impl] Run integration test, verify cats-effect Scaladoc JAR downloads
+- [x] [impl] [x] [reviewed] Write failing integration test: fetch Scaladoc JAR for `"org.typelevel::cats-effect:3.5.4"`
+- [x] [impl] [x] [reviewed] Open `CoursierArtifactRepository.scala`
+- [x] [impl] [x] [reviewed] Update `fetchJavadocJar()` to handle `scalaArtifact` field
+- [x] [impl] [x] [reviewed] Based on Phase 3.1 research: Construct Scala Module appropriately
+- [x] [impl] [x] [reviewed] Option A (if Coursier handles `::` automatically): Pass coordinates with `::`
+- [x] [impl] [x] [reviewed] Option B (if manual): Append Scala version suffix to artifactId
+- [x] [impl] [x] [reviewed] Keep `Classifier("javadoc")` unchanged (Scaladoc uses same classifier)
+- [x] [impl] [x] [reviewed] Run integration test, verify cats-effect Scaladoc JAR downloads
 
 ### Test with Multiple Scala Libraries
 
-- [ ] [test] Write integration test: fetch Scaladoc for `"dev.zio::zio:2.0.21"`
-- [ ] [impl] Verify implementation works for different Scala library
-- [ ] [test] Write test for non-existent Scala artifact → expect `ArtifactNotFound`
-- [ ] [impl] Ensure error handling works same as Java artifacts
+- [x] [impl] [x] [reviewed] Write integration test: fetch Scaladoc for `"dev.zio::zio:2.0.21"`
+- [x] [impl] [x] [reviewed] Verify implementation works for different Scala library
+- [x] [impl] [x] [reviewed] Write test for non-existent Scala artifact → expect `ArtifactNotFound`
+- [x] [impl] [x] [reviewed] Ensure error handling works same as Java artifacts
 
 ### Verify No Regression
 
-- [ ] [test] Run all existing CoursierArtifactRepositoryTest tests
-- [ ] [test] Verify Java artifact fetching still works (slf4j, guava)
-- [ ] [setup] Commit: "feat(infra): add Scala artifact resolution to Coursier repository"
+- [x] [impl] [x] [reviewed] Run all existing CoursierArtifactRepositoryTest tests
+- [x] [impl] [x] [reviewed] Verify Java artifact fetching still works (slf4j, guava)
+- [x] [impl] [x] [reviewed] Commit: "feat(infra): add Scala artifact resolution to Coursier repository"
 
 ---
 
