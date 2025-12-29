@@ -3,21 +3,24 @@
 
 package javadocsmcp.application
 
-import javadocsmcp.domain.DocumentationError
+import javadocsmcp.domain.{ArtifactCoordinates, DocumentationError}
 import javadocsmcp.testkit.{InMemoryArtifactRepository, InMemoryDocumentationReader}
 import java.io.File
 
 class DocumentationServiceTest extends munit.FunSuite:
 
-  val testJar = new File("/fake/path/test.jar")
-  val testHtmlContent = "<html><body>Test Logger documentation</body></html>"
+  // Test fixture factories - create fresh instances for each test
+  private def testJar: File = new File("/fake/path/test.jar")
+  private def testHtmlContent: String = "<html><body>Test Logger documentation</body></html>"
+  private def slf4jCoords: ArtifactCoordinates = ArtifactCoordinates("org.slf4j", "slf4j-api", "2.0.9")
 
   test("fetch documentation for valid coordinates and class"):
-    val repository = InMemoryArtifactRepository.withArtifacts(
-      "org.slf4j:slf4j-api:2.0.9" -> testJar
-    )
+    val jar = testJar
+    val html = testHtmlContent
+    val coords = slf4jCoords
+    val repository = InMemoryArtifactRepository.withArtifact(coords, jar)
     val reader = InMemoryDocumentationReader.withEntries(
-      (testJar, "org/slf4j/Logger.html") -> testHtmlContent
+      (jar, "org/slf4j/Logger.html") -> html
     )
     val service = DocumentationService(repository, reader)
 
@@ -26,17 +29,18 @@ class DocumentationServiceTest extends munit.FunSuite:
     assert(result.isRight, s"Should succeed but got: $result")
     val doc = result.toOption.get
     assertEquals(doc.className, "org.slf4j.Logger")
-    assertEquals(doc.htmlContent, testHtmlContent)
+    assertEquals(doc.htmlContent, html)
     assertEquals(doc.coordinates.groupId, "org.slf4j")
     assertEquals(doc.coordinates.artifactId, "slf4j-api")
     assertEquals(doc.coordinates.version, "2.0.9")
 
   test("handle inner class by stripping suffix"):
-    val repository = InMemoryArtifactRepository.withArtifacts(
-      "org.slf4j:slf4j-api:2.0.9" -> testJar
-    )
+    val jar = testJar
+    val html = testHtmlContent
+    val coords = slf4jCoords
+    val repository = InMemoryArtifactRepository.withArtifact(coords, jar)
     val reader = InMemoryDocumentationReader.withEntries(
-      (testJar, "org/slf4j/Logger.html") -> testHtmlContent
+      (jar, "org/slf4j/Logger.html") -> html
     )
     val service = DocumentationService(repository, reader)
 
@@ -44,7 +48,7 @@ class DocumentationServiceTest extends munit.FunSuite:
 
     assert(result.isRight, s"Should strip inner class suffix but got: $result")
     val doc = result.toOption.get
-    assertEquals(doc.htmlContent, testHtmlContent)
+    assertEquals(doc.htmlContent, html)
 
   test("return error for non-existent artifact"):
     val repository = InMemoryArtifactRepository.empty
@@ -59,9 +63,9 @@ class DocumentationServiceTest extends munit.FunSuite:
     }
 
   test("return error for non-existent class in valid artifact"):
-    val repository = InMemoryArtifactRepository.withArtifacts(
-      "org.slf4j:slf4j-api:2.0.9" -> testJar
-    )
+    val jar = testJar
+    val coords = slf4jCoords
+    val repository = InMemoryArtifactRepository.withArtifact(coords, jar)
     val reader = InMemoryDocumentationReader.empty
     val service = DocumentationService(repository, reader)
 

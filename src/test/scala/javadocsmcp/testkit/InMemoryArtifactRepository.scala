@@ -8,17 +8,20 @@ import javadocsmcp.domain.ports.ArtifactRepository
 import java.io.File
 
 class InMemoryArtifactRepository(
-  artifacts: Map[String, File] = Map.empty
+  artifacts: Map[ArtifactCoordinates, File] = Map.empty
 ) extends ArtifactRepository:
 
   def fetchJavadocJar(coords: ArtifactCoordinates): Either[DocumentationError, File] =
-    val key = s"${coords.groupId}:${coords.artifactId}:${coords.version}"
-    artifacts.get(key) match
+    artifacts.get(coords) match
       case Some(file) => Right(file)
-      case None => Left(DocumentationError.ArtifactNotFound(key))
+      case None => Left(DocumentationError.ArtifactNotFound(
+        s"${coords.groupId}:${coords.artifactId}:${coords.version}"))
 
 object InMemoryArtifactRepository:
   def empty: InMemoryArtifactRepository = new InMemoryArtifactRepository()
 
-  def withArtifacts(artifacts: (String, File)*): InMemoryArtifactRepository =
+  def withArtifact(coords: ArtifactCoordinates, file: File): InMemoryArtifactRepository =
+    new InMemoryArtifactRepository(Map(coords -> file))
+
+  def withArtifacts(artifacts: (ArtifactCoordinates, File)*): InMemoryArtifactRepository =
     new InMemoryArtifactRepository(artifacts.toMap)
