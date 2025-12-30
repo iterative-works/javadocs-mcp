@@ -671,3 +671,63 @@ M  src/test/scala/javadocsmcp/integration/EndToEndTest.scala
 ```
 
 ---
+
+## Phase 6: Handle missing classes within artifacts (2025-12-30)
+
+**What was built:**
+
+This phase focused on **comprehensive testing** of the ClassNotFound error handling. The implementation already existed from previous phases - Phase 6 validates the behavior works correctly.
+
+- **Test Coverage Added:**
+  - `DocumentationServiceIntegrationTest.scala` - 2 new tests for ClassNotFound scenarios
+  - `SourceCodeServiceIntegrationTest.scala` - 2 new tests for ClassNotFound scenarios
+  - `EndToEndTest.scala` - 3 new tests for MCP error responses and server stability
+
+**Decisions made:**
+
+- **No production code changes needed** - Existing `JarFileReader.readEntry()` already returns `ClassNotFound` when JAR entry missing
+- **Error message already enhanced** in Phase 5 with multi-line format and helpful suggestions
+- **Focus on test coverage** - Verify behavior works correctly for all scenarios
+
+**Test Scenarios Covered:**
+
+1. Non-existent class returns ClassNotFound with class name in error message
+2. Wrong capitalization (e.g., `org.slf4j.logger` instead of `Logger`) returns ClassNotFound
+3. Error message mentions case-sensitivity to help users debug
+4. Both `get_documentation` and `get_source` tools handle missing classes consistently
+5. Server remains stable after ClassNotFound errors (subsequent requests succeed)
+
+**Testing:**
+
+- Integration tests: 4 new tests (real Maven Central with org.slf4j:slf4j-api:2.0.9)
+- E2E tests: 3 new tests (MCP protocol error responses + stability)
+- Total: 91 tests passing (up from 84)
+
+**Code review:**
+
+- Iterations: 1
+- Review file: review-phase-06-20251230.md
+- Result: PASSED - 0 critical issues, 3 warnings, 6 suggestions
+- Warnings: Style consistency (Scala 3 indentation vs braces), shared mutable state pattern
+- All warnings are minor style issues, not correctness issues
+
+**For next phases:**
+
+- Available utilities:
+  - Complete test suite for all error scenarios
+  - Error handling verified at unit, integration, and E2E levels
+- Extension points:
+  - Phase 7: Add caching layer around services
+- Notes:
+  - All error scenarios now comprehensively covered
+  - Server stability verified after error responses
+
+**Files changed:**
+
+```
+M  src/test/scala/javadocsmcp/application/DocumentationServiceIntegrationTest.scala
+M  src/test/scala/javadocsmcp/application/SourceCodeServiceIntegrationTest.scala
+M  src/test/scala/javadocsmcp/integration/EndToEndTest.scala
+```
+
+---

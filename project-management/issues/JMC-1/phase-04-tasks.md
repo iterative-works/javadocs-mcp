@@ -36,6 +36,10 @@
 - [x] [verify] All acceptance criteria from phase-04-context.md met
 - [x] [verify] Gherkin scenario passes
 
+## Refactoring
+
+- [x] [impl] [x] [reviewed] Refactoring R1: TASTy-based Scala source lookup
+
 ---
 
 ## Task Details

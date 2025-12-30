@@ -4,7 +4,7 @@
 package javadocsmcp
 
 import javadocsmcp.application.{DocumentationService, SourceCodeService}
-import javadocsmcp.infrastructure.{CoursierArtifactRepository, JarFileReader}
+import javadocsmcp.infrastructure.{CoursierArtifactRepository, JarFileReader, TastySourceResolver}
 import javadocsmcp.presentation.McpServer
 
 @main def run(args: String*): Unit = {
@@ -14,8 +14,9 @@ import javadocsmcp.presentation.McpServer
 
   val repository = CoursierArtifactRepository()
   val reader = JarFileReader()
+  val sourcePathResolver = TastySourceResolver(repository)
   val documentationService = DocumentationService(repository, reader)
-  val sourceCodeService = SourceCodeService(repository, reader)
+  val sourceCodeService = SourceCodeService(repository, reader, sourcePathResolver)
 
   McpServer.start(documentationService, sourceCodeService, port)
 }

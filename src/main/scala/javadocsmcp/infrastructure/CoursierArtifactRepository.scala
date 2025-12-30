@@ -78,5 +78,8 @@ class CoursierArtifactRepository extends ArtifactRepository:
   def fetchSourcesJar(coords: ArtifactCoordinates, scalaVersion: String = "3"): Either[DocumentationError, File] =
     fetchJar(coords, scalaVersion, Classifier("sources"), SourcesNotAvailable.apply)
 
+  def fetchMainJar(coords: ArtifactCoordinates, scalaVersion: String = "3"): Either[DocumentationError, File] =
+    fetchJar(coords, scalaVersion, Classifier.empty, ArtifactNotFound.apply)
+
 object CoursierArtifactRepository:
   def apply(): CoursierArtifactRepository = new CoursierArtifactRepository()
