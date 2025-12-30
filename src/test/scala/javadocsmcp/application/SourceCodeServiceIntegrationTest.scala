@@ -70,4 +70,31 @@ class SourceCodeServiceIntegrationTest extends munit.FunSuite {
     assertEquals(source.coordinates.artifactId, "zio")
     assertEquals(source.coordinates.version, "2.0.21")
   }
+
+  test("return ClassNotFound for non-existent class in valid sources JAR") {
+    val result = service.getSource("org.slf4j:slf4j-api:2.0.9", "org.slf4j.NonExistentClass")
+
+    assert(result.isLeft, s"Should return error for non-existent class: $result")
+    result.left.foreach { error =>
+      assert(error.isInstanceOf[javadocsmcp.domain.DocumentationError.ClassNotFound],
+        s"Error should be ClassNotFound but got: $error")
+      assert(error.message.contains("NonExistentClass") || error.message.contains("org/slf4j/NonExistentClass"),
+        s"Error message should contain class name: ${error.message}")
+      assert(error.message.contains("capitalization") || error.message.contains("case-sensitive"),
+        s"Error message should mention capitalization: ${error.message}")
+    }
+  }
+
+  test("return ClassNotFound for wrong capitalization in sources") {
+    // "logger" with lowercase 'l' instead of "Logger"
+    val result = service.getSource("org.slf4j:slf4j-api:2.0.9", "org.slf4j.logger")
+
+    assert(result.isLeft, s"Should return error for wrong capitalization: $result")
+    result.left.foreach { error =>
+      assert(error.isInstanceOf[javadocsmcp.domain.DocumentationError.ClassNotFound],
+        s"Error should be ClassNotFound for capitalization error")
+      assert(error.message.contains("case-sensitive") || error.message.contains("capitalization"),
+        s"Error message should mention case-sensitivity: ${error.message}")
+    }
+  }
 }

@@ -490,6 +490,54 @@ class EndToEndTest extends munit.FunSuite:
       s"Error message should include suggestions: $errorMessage")
   }
 
+  test("should return error for wrong capitalization in get_documentation") {
+    val params = Json.obj(
+      "name" -> Json.fromString("get_documentation"),
+      "arguments" -> Json.obj(
+        "coordinates" -> Json.fromString("org.slf4j:slf4j-api:2.0.9"),
+        "className" -> Json.fromString("org.slf4j.logger")  // lowercase 'l'
+      )
+    )
+
+    val response = makeRequest("tools/call", params)
+
+    val hasError = response.hcursor.downField("result").downField("isError").as[Boolean].getOrElse(false)
+    assert(hasError, s"Expected error response for wrong capitalization: $response")
+
+    val errorMessage = response.hcursor.downField("result").downField("content")
+      .downArray.downField("text").as[String]
+      .getOrElse("")
+
+    assert(errorMessage.toLowerCase.contains("class") && errorMessage.toLowerCase.contains("not found"),
+      s"Error message should indicate class not found: $errorMessage")
+    assert(errorMessage.contains("case-sensitive") || errorMessage.contains("capitalization"),
+      s"Error message should mention case-sensitivity for capitalization errors: $errorMessage")
+  }
+
+  test("should return error for wrong capitalization in get_source") {
+    val params = Json.obj(
+      "name" -> Json.fromString("get_source"),
+      "arguments" -> Json.obj(
+        "coordinates" -> Json.fromString("org.slf4j:slf4j-api:2.0.9"),
+        "className" -> Json.fromString("org.slf4j.logger")  // lowercase 'l'
+      )
+    )
+
+    val response = makeRequest("tools/call", params)
+
+    val hasError = response.hcursor.downField("result").downField("isError").as[Boolean].getOrElse(false)
+    assert(hasError, s"Expected error response for wrong capitalization: $response")
+
+    val errorMessage = response.hcursor.downField("result").downField("content")
+      .downArray.downField("text").as[String]
+      .getOrElse("")
+
+    assert(errorMessage.toLowerCase.contains("class") && errorMessage.toLowerCase.contains("not found"),
+      s"Error message should indicate class not found: $errorMessage")
+    assert(errorMessage.contains("case-sensitive") || errorMessage.contains("capitalization"),
+      s"Error message should mention case-sensitivity for capitalization errors: $errorMessage")
+  }
+
   test("server remains stable after error responses") {
     // Trigger an error
     val errorParams = Json.obj(
