@@ -9,8 +9,8 @@
 
 ## Setup Tasks
 
-- [ ] Review cache port traits pattern from existing architecture
-- [ ] Identify cache configuration requirements (environment variables)
+- [x] Review cache port traits pattern from existing architecture
+- [x] Identify cache configuration requirements (environment variables)
 
 ---
 
@@ -143,26 +143,26 @@
 
 ### Cache Hit Performance Tests
 
-- [ ] Write test: "second request for same class under 100ms"
-- [ ] Write test: "cache hit overhead under 1ms"
-- [ ] Write test: "cached response identical to original response"
+- [x] Write test: "second request for same class under 100ms"
+- [x] Write test: "cache hit overhead under 1ms"
+- [x] Write test: "cached response identical to original response"
 
 ### Cache Key Uniqueness Tests
 
-- [ ] Write test: "different scalaVersion creates separate cache entry"
-- [ ] Write test: "same artifact different class shares JAR download benefit"
+- [x] Write test: "different scalaVersion creates separate cache entry"
+- [x] Write test: "same artifact different class shares JAR download benefit"
 
 ### Server Stability Tests
 
-- [ ] Write test: "cache doesn't break error handling"
-- [ ] Write test: "cached error returned correctly on second request"
-- [ ] Write test: "valid request after error works correctly"
+- [x] Write test: "cache doesn't break error handling"
+- [x] Write test: "cached error returned correctly on second request"
+- [x] Write test: "valid request after error works correctly"
 
 ### E2E Test Execution
 
-- [ ] Run all E2E performance tests and verify passing
-- [ ] Verify < 100ms target met for cache hits
-- [ ] Verify all responses correct (cached and non-cached)
+- [x] Run all E2E performance tests and verify passing
+- [x] Verify < 100ms target met for cache hits
+- [x] Verify all responses correct (cached and non-cached)
 
 ---
 
@@ -189,10 +189,10 @@
 
 ### Code Documentation
 
-- [ ] Add PURPOSE comment to LRUCache.scala
-- [ ] Add PURPOSE comment to CachedDocumentationService.scala
-- [ ] Add PURPOSE comment to CachedSourceCodeService.scala
-- [ ] Add inline comments explaining LRU algorithm
+- [x] Add PURPOSE comment to LRUCache.scala
+- [x] Add PURPOSE comment to CachedDocumentationService.scala
+- [x] Add PURPOSE comment to CachedSourceCodeService.scala
+- [x] Add inline comments explaining LRU algorithm
 
 ### README Updates
 
@@ -212,26 +212,26 @@
 
 ## Acceptance Criteria Verification
 
-- [ ] CacheKey case class with coordinates, className, scalaVersion exists
-- [ ] LRUCache[K, V] with thread-safe operations exists
-- [ ] CachedDocumentationService decorator exists and works
-- [ ] CachedSourceCodeService decorator exists and works
-- [ ] Cache statistics (hits, misses, evictions, size) implemented
-- [ ] Main.scala wires cached services into tools
-- [ ] CACHE_MAX_SIZE_MB environment variable configurable
-- [ ] Second request for same class < 100ms (verified by test)
-- [ ] Cache hit overhead < 1ms (verified by test)
-- [ ] Different class from same artifact < 1s (Coursier benefit)
-- [ ] 100 concurrent cache reads work without errors
-- [ ] Cache returns identical result to non-cached service
-- [ ] Different cache keys return different results
-- [ ] Error results cached correctly
-- [ ] Thread-safe operations verified
-- [ ] Unit tests: 15+ tests for cache behavior passing
-- [ ] Integration tests: 10+ tests with real services passing
-- [ ] E2E tests: 5+ tests for cached HTTP responses passing
-- [ ] All tests passing with zero warnings
-- [ ] README section on caching configuration complete
+- [x] CacheKey case class with coordinates, className, scalaVersion exists
+- [x] LRUCache[K, V] with thread-safe operations exists
+- [x] CachedDocumentationService decorator exists and works
+- [x] CachedSourceCodeService decorator exists and works
+- [x] Cache statistics (hits, misses, evictions, size) implemented
+- [x] Main.scala wires cached services into tools
+- [x] CACHE_MAX_SIZE_MB environment variable configurable
+- [x] Second request for same class < 100ms (verified by test)
+- [x] Cache hit overhead < 1ms (verified by test)
+- [x] Different class from same artifact < 1s (Coursier benefit)
+- [x] 100 concurrent cache reads work without errors
+- [x] Cache returns identical result to non-cached service
+- [x] Different cache keys return different results
+- [x] Error results cached correctly
+- [x] Thread-safe operations verified
+- [x] Unit tests: 15+ tests for cache behavior passing
+- [x] Integration tests: 10+ tests with real services passing
+- [x] E2E tests: 5+ tests for cached HTTP responses passing
+- [x] All tests passing with zero warnings
+- [x] README section on caching configuration complete
 
 ---
 
