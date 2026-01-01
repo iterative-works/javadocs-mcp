@@ -753,3 +753,26 @@ A: Total across both caches. Sum of documentation + source cache sizes < limit.
 **Ready for Implementation:** ✅
 
 **Next Step:** `/iterative-works:ag-implement JMC-1` will start TDD implementation of Phase 7
+
+---
+
+## Refactoring Decisions
+
+### R1: Fix LRUCache Thread Safety (2025-12-31)
+
+**Trigger:** Code review (composition skill) found thread safety issues:
+1. Race condition: `valueSize` calculated outside synchronized block in `put()`
+2. Synchronization mismatch: TrieMap (lock-free) used with mutable.Queue (synchronized) creates potential ABA problem where cache and queue become inconsistent
+
+**Decision:** Simplify LRUCache to use consistent synchronization rather than mixed lock-free + synchronized approach. This ensures correctness under concurrent load without complex locking strategies.
+
+**Scope:**
+- Files affected: `src/main/scala/javadocsmcp/infrastructure/LRUCache.scala`
+- Components: LRUCache class only
+- Boundaries: DO NOT change CachedDocumentationService, CachedSourceCodeService, tests (tests should continue passing)
+
+**Approach:**
+1. Replace TrieMap with standard mutable.Map
+2. Wrap all public methods in synchronized blocks
+3. Keep size calculation inside synchronized for atomicity
+4. Maintain existing API - no changes to method signatures

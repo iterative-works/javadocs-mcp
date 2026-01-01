@@ -18,56 +18,56 @@
 
 ### Tests First
 
-- [ ] Write test: "get returns None for missing key"
-- [ ] Write test: "put and get returns cached value"
-- [ ] Write test: "size calculation includes all entries"
-- [ ] Write test: "empty cache has zero size"
+- [x] Write test: "get returns None for missing key"
+- [x] Write test: "put and get returns cached value"
+- [x] Write test: "size calculation includes all entries"
+- [x] Write test: "empty cache has zero size"
 
 ### Implementation
 
-- [ ] Implement LRUCache with TrieMap for thread-safe storage
-- [ ] Implement get() method with access tracking
-- [ ] Implement put() method with size management
-- [ ] Implement size() method for current cache size
+- [x] Implement LRUCache with TrieMap for thread-safe storage
+- [x] Implement get() method with access tracking
+- [x] Implement put() method with size management
+- [x] Implement size() method for current cache size
 
 ### LRU Eviction Tests
 
-- [ ] Write test: "LRU eviction when size exceeded"
-- [ ] Write test: "access updates LRU order on get"
-- [ ] Write test: "access updates LRU order on put"
-- [ ] Write test: "eviction happens when byte limit exceeded"
+- [x] Write test: "LRU eviction when size exceeded"
+- [x] Write test: "access updates LRU order on get"
+- [x] Write test: "access updates LRU order on put"
+- [x] Write test: "eviction happens when byte limit exceeded"
 
 ### LRU Eviction Implementation
 
-- [ ] Implement access order tracking with Queue
-- [ ] Implement LRU eviction logic (remove least recently used)
-- [ ] Implement byte size limit enforcement
-- [ ] Implement bulk eviction (10% when limit hit)
+- [x] Implement access order tracking with Queue
+- [x] Implement LRU eviction logic (remove least recently used)
+- [x] Implement byte size limit enforcement
+- [x] Implement bulk eviction (10% when limit hit)
 
 ### Cache Statistics Tests
 
-- [ ] Write test: "stats track hits and misses"
-- [ ] Write test: "stats track eviction count"
-- [ ] Write test: "hitRate calculation is correct"
+- [x] Write test: "stats track hits and misses"
+- [x] Write test: "stats track eviction count"
+- [x] Write test: "hitRate calculation is correct"
 
 ### Cache Statistics Implementation
 
-- [ ] Implement CacheStats case class
-- [ ] Implement hit/miss tracking in get()
-- [ ] Implement eviction count tracking
-- [ ] Implement clear() method for testing
+- [x] Implement CacheStats case class
+- [x] Implement hit/miss tracking in get()
+- [x] Implement eviction count tracking
+- [x] Implement clear() method for testing
 
 ### Thread Safety Tests
 
-- [ ] Write test: "concurrent reads don't corrupt cache"
-- [ ] Write test: "concurrent writes don't lose updates"
-- [ ] Write test: "concurrent read/write operations are safe"
+- [x] Write test: "concurrent reads don't corrupt cache"
+- [x] Write test: "concurrent writes don't lose updates"
+- [x] Write test: "concurrent read/write operations are safe"
 
 ### Thread Safety Verification
 
-- [ ] Verify TrieMap handles concurrent reads
-- [ ] Verify synchronized access order updates
-- [ ] Run all LRUCache tests and verify passing
+- [x] Verify TrieMap handles concurrent reads
+- [x] Verify synchronized access order updates
+- [x] Run all LRUCache tests and verify passing
 
 ---
 
@@ -75,33 +75,33 @@
 
 ### Port Definition
 
-- [ ] Create DocumentationCache port trait (if not using generic cache)
-- [ ] Define cache key structure (coordinates + className + scalaVersion)
+- [x] Create DocumentationCache port trait (if not using generic cache)
+- [x] Define cache key structure (coordinates + className + scalaVersion)
 
 ### Decorator Tests
 
-- [ ] Write test: "first request calls underlying service"
-- [ ] Write test: "second request served from cache (cache hit)"
-- [ ] Write test: "different className fetches again (cache miss)"
-- [ ] Write test: "different scalaVersion fetches again (different key)"
+- [x] Write test: "first request calls underlying service"
+- [x] Write test: "second request served from cache (cache hit)"
+- [x] Write test: "different className fetches again (cache miss)"
+- [x] Write test: "different scalaVersion fetches again (different key)"
 
 ### Decorator Implementation
 
-- [ ] Implement CachedDocumentationService decorator
-- [ ] Implement cache key generation from input parameters
-- [ ] Implement cache lookup before delegation to underlying service
-- [ ] Implement cache storage after successful service call
+- [x] Implement CachedDocumentationService decorator
+- [x] Implement cache key generation from input parameters
+- [x] Implement cache lookup before delegation to underlying service
+- [x] Implement cache storage after successful service call
 
 ### Error Caching Tests
 
-- [ ] Write test: "error results are cached (avoid repeated failed lookups)"
-- [ ] Write test: "cached error matches original error"
+- [x] Write test: "error results are cached (avoid repeated failed lookups)"
+- [x] Write test: "cached error matches original error"
 
 ### Error Caching Implementation
 
-- [ ] Update cache to store Either[Error, String] results
-- [ ] Cache both success and error responses
-- [ ] Run all CachedDocumentationService tests and verify passing
+- [x] Update cache to store Either[Error, String] results
+- [x] Cache both success and error responses
+- [x] Run all CachedDocumentationService tests and verify passing
 
 ---
 
@@ -109,17 +109,17 @@
 
 ### Source Cache Tests
 
-- [ ] Write test: "first request calls underlying source service"
-- [ ] Write test: "second request served from cache"
-- [ ] Write test: "different className fetches again"
-- [ ] Write test: "error results are cached for source lookups"
+- [x] Write test: "first request calls underlying source service"
+- [x] Write test: "second request served from cache"
+- [x] Write test: "different className fetches again"
+- [x] Write test: "error results are cached for source lookups"
 
 ### Source Cache Implementation
 
-- [ ] Implement CachedSourceCodeService following documentation pattern
-- [ ] Implement cache key generation for source requests
-- [ ] Implement cache lookup and storage logic
-- [ ] Run all CachedSourceCodeService tests and verify passing
+- [x] Implement CachedSourceCodeService following documentation pattern
+- [x] Implement cache key generation for source requests
+- [x] Implement cache lookup and storage logic
+- [x] Run all CachedSourceCodeService tests and verify passing
 
 ---
 
@@ -127,15 +127,15 @@
 
 ### Configuration
 
-- [ ] Read CACHE_MAX_SIZE_MB environment variable with default 100MB
-- [ ] Create LRUCache instances for documentation and source
+- [x] Read CACHE_MAX_SIZE_MB environment variable with default 100MB
+- [x] Create LRUCache instances for documentation and source
 
 ### Service Wiring
 
-- [ ] Create CachedDocumentationService wrapping existing documentationService
-- [ ] Create CachedSourceCodeService wrapping existing sourceCodeService
-- [ ] Wire cached services into MCP tools (replace non-cached versions)
-- [ ] Verify Main.scala compiles without errors
+- [x] Create CachedDocumentationService wrapping existing documentationService
+- [x] Create CachedSourceCodeService wrapping existing sourceCodeService
+- [x] Wire cached services into MCP tools (replace non-cached versions)
+- [x] Verify Main.scala compiles without errors
 
 ---
 
@@ -196,17 +196,17 @@
 
 ### README Updates
 
-- [ ] Document CACHE_MAX_SIZE_MB configuration in README
-- [ ] Explain cache performance characteristics
-- [ ] Add cache statistics interpretation guide
-- [ ] Add performance tuning recommendations
+- [x] Document CACHE_MAX_SIZE_MB configuration in README
+- [x] Explain cache performance characteristics
+- [x] Add cache statistics interpretation guide
+- [x] Add performance tuning recommendations
 
 ### Final Verification
 
-- [ ] Run complete test suite (unit + integration + E2E)
-- [ ] Verify zero warnings in test output
-- [ ] Verify all acceptance criteria met
-- [ ] Start server and manually verify caching with curl
+- [x] Run complete test suite (unit + integration + E2E)
+- [x] Verify zero warnings in test output
+- [x] Verify all acceptance criteria met
+- [x] Start server and manually verify caching with curl
 
 ---
 
@@ -232,6 +232,12 @@
 - [ ] E2E tests: 5+ tests for cached HTTP responses passing
 - [ ] All tests passing with zero warnings
 - [ ] README section on caching configuration complete
+
+---
+
+## Refactoring
+
+- [ ] [impl] [ ] [reviewed] Refactoring R1: Fix LRUCache Thread Safety
 
 ---
 
