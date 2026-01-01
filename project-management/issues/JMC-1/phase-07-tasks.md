@@ -237,7 +237,7 @@
 
 ## Refactoring
 
-- [ ] [impl] [ ] [reviewed] Refactoring R1: Fix LRUCache Thread Safety
+- [x] [impl] [x] [reviewed] Refactoring R1: Fix LRUCache Thread Safety
 
 ---
 

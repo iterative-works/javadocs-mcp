@@ -3,51 +3,49 @@
 
 package javadocsmcp.infrastructure
 
-import scala.collection.concurrent.TrieMap
 import scala.collection.mutable
 
 class LRUCache[K, V](maxSizeBytes: Long):
-  private val cache = TrieMap.empty[K, V]
+  private val cache = mutable.Map.empty[K, V]
   private val accessOrder = mutable.Queue.empty[K]
   private var _currentSize: Long = 0L
   private var _hits: Long = 0L
   private var _misses: Long = 0L
   private var _evictions: Long = 0L
 
-  def get(key: K): Option[V] =
+  def get(key: K): Option[V] = synchronized {
     cache.get(key) match
       case Some(value) =>
-        synchronized {
-          _hits += 1
-          updateAccessOrder(key)
-        }
+        _hits += 1
+        updateAccessOrder(key)
         Some(value)
       case None =>
-        synchronized { _misses += 1 }
+        _misses += 1
         None
+  }
 
-  def put(key: K, value: V): Unit =
+  def put(key: K, value: V): Unit = synchronized {
     val valueSize = estimateSize(value)
-    synchronized {
-      // If key already exists, remove its old size
-      if cache.contains(key) then
-        cache.get(key).foreach { oldValue =>
-          _currentSize -= estimateSize(oldValue)
-        }
 
-      // Add new value
-      cache.put(key, value)
-      _currentSize += valueSize
-      updateAccessOrder(key)
+    // If key already exists, remove its old size
+    if cache.contains(key) then
+      cache.get(key).foreach { oldValue =>
+        _currentSize -= estimateSize(oldValue)
+      }
 
-      // Evict if necessary
-      while _currentSize > maxSizeBytes && accessOrder.nonEmpty do
-        val evictKey = accessOrder.dequeue()
-        cache.remove(evictKey).foreach { evictedValue =>
-          _currentSize -= estimateSize(evictedValue)
-          _evictions += 1
-        }
-    }
+    // Add new value
+    cache.put(key, value)
+    _currentSize += valueSize
+    updateAccessOrder(key)
+
+    // Evict if necessary
+    while _currentSize > maxSizeBytes && accessOrder.nonEmpty do
+      val evictKey = accessOrder.dequeue()
+      cache.remove(evictKey).foreach { evictedValue =>
+        _currentSize -= estimateSize(evictedValue)
+        _evictions += 1
+      }
+  }
 
   def currentSize: Long = synchronized { _currentSize }
 

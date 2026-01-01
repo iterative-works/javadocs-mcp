@@ -821,3 +821,58 @@ M  README.md
 ```
 
 ---
+
+### Refactoring R1: Fix LRUCache Thread Safety (2026-01-02)
+
+**Trigger:** Code review (composition skill) found thread safety issues:
+1. Race condition: `valueSize = estimateSize(value)` calculated outside synchronized block in `put()`
+2. TrieMap/Queue mismatch: `cache.get(key)` in `get()` reads outside synchronized, then updates accessOrder inside - creates ABA problem where cache and queue become inconsistent
+
+**What changed:**
+
+- `src/main/scala/javadocsmcp/infrastructure/LRUCache.scala`:
+  - Replaced `TrieMap` with standard `mutable.Map`
+  - Moved entire `get()` method body inside `synchronized` block
+  - Moved `valueSize` calculation inside `synchronized` block in `put()`
+
+**Before → After:**
+
+```scala
+// Before: Race condition - TrieMap read outside synchronized
+def get(key: K): Option[V] =
+  cache.get(key) match          // Outside synchronized!
+    case Some(value) =>
+      synchronized { ... }
+
+// After: Everything synchronized
+def get(key: K): Option[V] = synchronized {
+  cache.get(key) match
+    case Some(value) => ...
+}
+```
+
+**Patterns applied:**
+
+- **Consistent Synchronization:** All state access wrapped in synchronized blocks
+- **Simplification over Complexity:** Removed mixed lock-free + synchronized approach
+
+**Testing:**
+
+- All 30 cache-related tests pass without modification
+- Thread-safety tests (3 concurrent operation tests) continue to pass
+- Performance tests confirm < 100ms cache hit target still met
+
+**Code review:**
+
+- Iterations: 1
+- Review file: review-refactor-07-R1-20260102.md
+- Result: PASSED - 0 critical issues
+- Warnings: 2 (both out of scope - synchronized decomposition, service duplication)
+
+**Files changed:**
+
+```
+M  src/main/scala/javadocsmcp/infrastructure/LRUCache.scala
+```
+
+---
