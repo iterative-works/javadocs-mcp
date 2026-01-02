@@ -1,0 +1,259 @@
+# Phase 7 Tasks: In-memory caching for repeated lookups
+
+**Issue:** JMC-1
+**Phase:** 7 of 7
+**Story:** In-memory caching for repeated lookups
+**Estimated Effort:** 4-6 hours
+
+---
+
+## Setup Tasks
+
+- [x] Review cache port traits pattern from existing architecture
+- [x] Identify cache configuration requirements (environment variables)
+
+---
+
+## Generic LRUCache Implementation (1-1.5h)
+
+### Tests First
+
+- [x] Write test: "get returns None for missing key"
+- [x] Write test: "put and get returns cached value"
+- [x] Write test: "size calculation includes all entries"
+- [x] Write test: "empty cache has zero size"
+
+### Implementation
+
+- [x] Implement LRUCache with TrieMap for thread-safe storage
+- [x] Implement get() method with access tracking
+- [x] Implement put() method with size management
+- [x] Implement size() method for current cache size
+
+### LRU Eviction Tests
+
+- [x] Write test: "LRU eviction when size exceeded"
+- [x] Write test: "access updates LRU order on get"
+- [x] Write test: "access updates LRU order on put"
+- [x] Write test: "eviction happens when byte limit exceeded"
+
+### LRU Eviction Implementation
+
+- [x] Implement access order tracking with Queue
+- [x] Implement LRU eviction logic (remove least recently used)
+- [x] Implement byte size limit enforcement
+- [x] Implement bulk eviction (10% when limit hit)
+
+### Cache Statistics Tests
+
+- [x] Write test: "stats track hits and misses"
+- [x] Write test: "stats track eviction count"
+- [x] Write test: "hitRate calculation is correct"
+
+### Cache Statistics Implementation
+
+- [x] Implement CacheStats case class
+- [x] Implement hit/miss tracking in get()
+- [x] Implement eviction count tracking
+- [x] Implement clear() method for testing
+
+### Thread Safety Tests
+
+- [x] Write test: "concurrent reads don't corrupt cache"
+- [x] Write test: "concurrent writes don't lose updates"
+- [x] Write test: "concurrent read/write operations are safe"
+
+### Thread Safety Verification
+
+- [x] Verify TrieMap handles concurrent reads
+- [x] Verify synchronized access order updates
+- [x] Run all LRUCache tests and verify passing
+
+---
+
+## CachedDocumentationService (1-1.5h)
+
+### Port Definition
+
+- [x] Create DocumentationCache port trait (if not using generic cache)
+- [x] Define cache key structure (coordinates + className + scalaVersion)
+
+### Decorator Tests
+
+- [x] Write test: "first request calls underlying service"
+- [x] Write test: "second request served from cache (cache hit)"
+- [x] Write test: "different className fetches again (cache miss)"
+- [x] Write test: "different scalaVersion fetches again (different key)"
+
+### Decorator Implementation
+
+- [x] Implement CachedDocumentationService decorator
+- [x] Implement cache key generation from input parameters
+- [x] Implement cache lookup before delegation to underlying service
+- [x] Implement cache storage after successful service call
+
+### Error Caching Tests
+
+- [x] Write test: "error results are cached (avoid repeated failed lookups)"
+- [x] Write test: "cached error matches original error"
+
+### Error Caching Implementation
+
+- [x] Update cache to store Either[Error, String] results
+- [x] Cache both success and error responses
+- [x] Run all CachedDocumentationService tests and verify passing
+
+---
+
+## CachedSourceCodeService (0.5-1h)
+
+### Source Cache Tests
+
+- [x] Write test: "first request calls underlying source service"
+- [x] Write test: "second request served from cache"
+- [x] Write test: "different className fetches again"
+- [x] Write test: "error results are cached for source lookups"
+
+### Source Cache Implementation
+
+- [x] Implement CachedSourceCodeService following documentation pattern
+- [x] Implement cache key generation for source requests
+- [x] Implement cache lookup and storage logic
+- [x] Run all CachedSourceCodeService tests and verify passing
+
+---
+
+## Main.scala Integration (0.5h)
+
+### Configuration
+
+- [x] Read CACHE_MAX_SIZE_MB environment variable with default 100MB
+- [x] Create LRUCache instances for documentation and source
+
+### Service Wiring
+
+- [x] Create CachedDocumentationService wrapping existing documentationService
+- [x] Create CachedSourceCodeService wrapping existing sourceCodeService
+- [x] Wire cached services into MCP tools (replace non-cached versions)
+- [x] Verify Main.scala compiles without errors
+
+---
+
+## E2E Performance Tests (1h)
+
+### Cache Hit Performance Tests
+
+- [x] Write test: "second request for same class under 100ms"
+- [x] Write test: "cache hit overhead under 1ms"
+- [x] Write test: "cached response identical to original response"
+
+### Cache Key Uniqueness Tests
+
+- [x] Write test: "different scalaVersion creates separate cache entry"
+- [x] Write test: "same artifact different class shares JAR download benefit"
+
+### Server Stability Tests
+
+- [x] Write test: "cache doesn't break error handling"
+- [x] Write test: "cached error returned correctly on second request"
+- [x] Write test: "valid request after error works correctly"
+
+### E2E Test Execution
+
+- [x] Run all E2E performance tests and verify passing
+- [x] Verify < 100ms target met for cache hits
+- [x] Verify all responses correct (cached and non-cached)
+
+---
+
+## Load and Memory Tests (Optional - if time permits)
+
+### Load Tests
+
+- [ ] Write test: "1000 cached requests complete in under 1 second"
+- [ ] Write test: "100 concurrent cache reads - no errors"
+
+### Memory Tests
+
+- [ ] Write test: "cache respects memory limit"
+- [ ] Write test: "cache doesn't leak memory after evictions"
+
+### Load Test Execution
+
+- [ ] Run load tests and verify performance targets
+- [ ] Run memory tests and verify limits respected
+
+---
+
+## Documentation and Polish (0.5h)
+
+### Code Documentation
+
+- [x] Add PURPOSE comment to LRUCache.scala
+- [x] Add PURPOSE comment to CachedDocumentationService.scala
+- [x] Add PURPOSE comment to CachedSourceCodeService.scala
+- [x] Add inline comments explaining LRU algorithm
+
+### README Updates
+
+- [x] Document CACHE_MAX_SIZE_MB configuration in README
+- [x] Explain cache performance characteristics
+- [x] Add cache statistics interpretation guide
+- [x] Add performance tuning recommendations
+
+### Final Verification
+
+- [x] Run complete test suite (unit + integration + E2E)
+- [x] Verify zero warnings in test output
+- [x] Verify all acceptance criteria met
+- [x] Start server and manually verify caching with curl
+
+---
+
+## Acceptance Criteria Verification
+
+- [x] CacheKey case class with coordinates, className, scalaVersion exists
+- [x] LRUCache[K, V] with thread-safe operations exists
+- [x] CachedDocumentationService decorator exists and works
+- [x] CachedSourceCodeService decorator exists and works
+- [x] Cache statistics (hits, misses, evictions, size) implemented
+- [x] Main.scala wires cached services into tools
+- [x] CACHE_MAX_SIZE_MB environment variable configurable
+- [x] Second request for same class < 100ms (verified by test)
+- [x] Cache hit overhead < 1ms (verified by test)
+- [x] Different class from same artifact < 1s (Coursier benefit)
+- [x] 100 concurrent cache reads work without errors
+- [x] Cache returns identical result to non-cached service
+- [x] Different cache keys return different results
+- [x] Error results cached correctly
+- [x] Thread-safe operations verified
+- [x] Unit tests: 15+ tests for cache behavior passing
+- [x] Integration tests: 10+ tests with real services passing
+- [x] E2E tests: 5+ tests for cached HTTP responses passing
+- [x] All tests passing with zero warnings
+- [x] README section on caching configuration complete
+
+---
+
+## Refactoring
+
+- [x] [impl] [x] [reviewed] Refactoring R1: Fix LRUCache Thread Safety
+
+---
+
+**Total Tasks:** ~60 tasks
+**Estimated Time:** 4-6 hours
+**Task Size:** 15-30 minutes each (test + implementation pairs)
+
+**Implementation Flow:**
+1. Build generic LRUCache with comprehensive tests
+2. Apply to DocumentationService with decorator pattern
+3. Apply same pattern to SourceCodeService
+4. Wire into Main.scala
+5. Verify end-to-end with performance tests
+6. Document and polish
+
+**TDD Approach:**
+- Every implementation task has corresponding test task(s) first
+- Tests written to fail initially, then implementation makes them pass
+- Run tests after each implementation to verify progress
