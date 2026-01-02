@@ -141,16 +141,16 @@ sequenceDiagram
 
 ```mermaid
 graph LR
-    subgraph "LRUCache[K, V]"
-        TM[TrieMap<br/>Thread-safe storage]
-        AO[Queue<br/>Access order tracking]
-        ST[Stats<br/>hits/misses/evictions]
+    subgraph Cache["LRUCache K,V"]
+        TM["mutable.Map<br/>Thread-safe storage"]
+        AO["Queue<br/>Access order tracking"]
+        ST["Stats<br/>hits/misses/evictions"]
     end
 
-    subgraph "Operations"
-        GET[get(key)]
-        PUT[put(key, value)]
-        EVT[evict()]
+    subgraph Operations
+        GET["get: key → Option"]
+        PUT["put: key,value → Unit"]
+        EVT["evict LRU entries"]
     end
 
     GET --> TM
@@ -276,7 +276,7 @@ graph TD
 
 1. **Decorator Pattern**: Zero changes to existing services (Open/Closed Principle). Cache layer wraps existing services transparently.
 
-2. **TrieMap for Thread Safety**: Lock-free concurrent reads, atomic compare-and-swap writes. Built into Scala standard library.
+2. **Synchronized mutable.Map for Thread Safety**: All operations wrapped in synchronized blocks for consistent locking. Simpler than mixed lock-free + synchronized approach (refactored in R1).
 
 3. **Structural Types**: McpServer and ToolDefinitions accept structural types, allowing cached services to satisfy the same interface as base services without inheritance.
 
