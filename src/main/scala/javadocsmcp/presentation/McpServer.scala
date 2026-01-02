@@ -4,8 +4,9 @@
 package javadocsmcp.presentation
 
 import chimp.mcpEndpoint
-import javadocsmcp.application.{DocumentationService, SourceCodeService}
+import javadocsmcp.domain.{Documentation, SourceCode, DocumentationError}
 import sttp.tapir.server.netty.sync.NettySyncServer
+import scala.language.reflectiveCalls
 
 object McpServer {
 
@@ -15,8 +16,12 @@ object McpServer {
 
   /** Start server asynchronously in background thread and return a handle for stopping it */
   def startAsync(
-    documentationService: DocumentationService,
-    sourceCodeService: SourceCodeService,
+    documentationService: {
+      def getDocumentation(coordinatesStr: String, classNameStr: String, scalaVersion: Option[String]): Either[DocumentationError, Documentation]
+    },
+    sourceCodeService: {
+      def getSource(coordinatesStr: String, classNameStr: String, scalaVersion: Option[String]): Either[DocumentationError, SourceCode]
+    },
     port: Int
   ): ServerHandle = {
     val getDocTool = ToolDefinitions.getDocumentationTool(documentationService)
@@ -43,8 +48,12 @@ object McpServer {
 
   /** Start server and block until shutdown (for Main.scala) */
   def start(
-    documentationService: DocumentationService,
-    sourceCodeService: SourceCodeService,
+    documentationService: {
+      def getDocumentation(coordinatesStr: String, classNameStr: String, scalaVersion: Option[String]): Either[DocumentationError, Documentation]
+    },
+    sourceCodeService: {
+      def getSource(coordinatesStr: String, classNameStr: String, scalaVersion: Option[String]): Either[DocumentationError, SourceCode]
+    },
     port: Int
   ): Unit = {
     val getDocTool = ToolDefinitions.getDocumentationTool(documentationService)

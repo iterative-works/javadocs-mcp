@@ -4,9 +4,10 @@
 package javadocsmcp.presentation
 
 import chimp.*
-import javadocsmcp.application.{DocumentationService, SourceCodeService}
+import javadocsmcp.domain.{Documentation, SourceCode, DocumentationError}
 import io.circe.Codec
 import sttp.tapir.Schema
+import scala.language.reflectiveCalls
 
 case class GetDocInput(
   coordinates: String,
@@ -21,7 +22,9 @@ case class GetSourceInput(
 ) derives Codec, Schema
 
 object ToolDefinitions {
-  def getDocumentationTool(service: DocumentationService) = {
+  def getDocumentationTool(service: {
+    def getDocumentation(coordinatesStr: String, classNameStr: String, scalaVersion: Option[String]): Either[DocumentationError, Documentation]
+  }) = {
     val docTool = tool("get_documentation")
       .description("""Fetch Javadoc/Scaladoc HTML documentation for a Java or Scala library class.
 
@@ -49,7 +52,9 @@ Examples:
     }
   }
 
-  def getSourceTool(service: SourceCodeService) = {
+  def getSourceTool(service: {
+    def getSource(coordinatesStr: String, classNameStr: String, scalaVersion: Option[String]): Either[DocumentationError, SourceCode]
+  }) = {
     val sourceTool = tool("get_source")
       .description("""Fetch Java or Scala source code for a library class.
 

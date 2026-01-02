@@ -731,3 +731,148 @@ M  src/test/scala/javadocsmcp/integration/EndToEndTest.scala
 ```
 
 ---
+
+## Phase 7: In-memory caching for repeated lookups (2025-12-31)
+
+**What was built:**
+
+- **Infrastructure Layer:**
+  - `LRUCache.scala` - Generic thread-safe LRU cache with size-based eviction
+    - TrieMap for concurrent storage, synchronized Queue for access order
+    - CacheStats for hits/misses/evictions tracking
+    - Configurable max size in bytes
+  - `CachedDocumentationService.scala` - Decorator wrapping DocumentationService
+    - Cache key: (coordinates, className, scalaVersion)
+    - Caches both success and error results
+  - `CachedSourceCodeService.scala` - Decorator wrapping SourceCodeService
+    - Same caching pattern as documentation service
+
+- **Application Wiring:**
+  - `Main.scala` - Cache configuration from `CACHE_MAX_SIZE_MB` environment variable
+    - Default 100MB per cache (documentation and source separate)
+    - Wraps base services with caching decorators
+
+- **Presentation Layer:**
+  - `McpServer.scala` / `ToolDefinitions.scala` - Updated to accept structural types
+    - Allows both base and cached services without trait inheritance
+
+**Decisions made:**
+
+- **Decorator Pattern:** Zero changes to existing services (Open/Closed Principle)
+- **TrieMap for storage:** Lock-free concurrent reads (but see refactoring note below)
+- **Structural Types:** Presentation layer accepts any type with matching method signatures
+- **Error Caching:** Both success and error results cached to avoid repeated failed lookups
+- **Separate Caches:** Documentation and source have independent caches
+
+**Patterns applied:**
+
+- **Decorator Pattern:** Cache layer wraps existing services transparently
+- **LRU Eviction:** Least-recently-used entries evicted when size limit exceeded
+- **Structural Types:** Flexible service injection without trait hierarchies
+
+**Testing:**
+
+- Unit tests: 15 tests for LRUCache (get/put/eviction/stats/thread-safety)
+- Integration tests: 10 tests for cached services (cache hit/miss/error caching)
+- E2E tests: 5 performance tests (< 100ms cache hit verified)
+- Total: 121 tests passing (up from 91)
+
+**Performance results:**
+
+- First request (cache miss): ~520ms
+- Second request (cache hit): ~7-26ms (well under 100ms target)
+- Improvement: 97% latency reduction
+
+**Code review:**
+
+- Iterations: 1
+- Review file: review-phase-07-20251231.md
+- Result: 5 critical issues found (3 architecture, 2 composition)
+- Architecture issues: Layer placement (decorators in infrastructure instead of application)
+- Composition issues: Thread safety concerns in LRUCache (TrieMap + Queue mismatch)
+
+**Refactoring planned:**
+
+- R1: Fix LRUCache Thread Safety - simplify to consistent synchronization
+- See: refactor-phase-07-R1.md
+
+**For next phases:**
+
+- This is the final phase (7/7)
+- Available utilities:
+  - LRUCache generic cache for any key/value types
+  - Decorator pattern for cross-cutting concerns
+- Configuration: `CACHE_MAX_SIZE_MB` environment variable
+
+**Files changed:**
+
+```
+A  src/main/scala/javadocsmcp/infrastructure/LRUCache.scala
+A  src/main/scala/javadocsmcp/infrastructure/CachedDocumentationService.scala
+A  src/main/scala/javadocsmcp/infrastructure/CachedSourceCodeService.scala
+M  src/main/scala/javadocsmcp/Main.scala
+M  src/main/scala/javadocsmcp/presentation/McpServer.scala
+M  src/main/scala/javadocsmcp/presentation/ToolDefinitions.scala
+A  src/test/scala/javadocsmcp/infrastructure/LRUCacheTest.scala
+A  src/test/scala/javadocsmcp/infrastructure/CachedDocumentationServiceTest.scala
+A  src/test/scala/javadocsmcp/infrastructure/CachedSourceCodeServiceTest.scala
+A  src/test/scala/javadocsmcp/integration/CachePerformanceTest.scala
+M  README.md
+```
+
+---
+
+### Refactoring R1: Fix LRUCache Thread Safety (2026-01-02)
+
+**Trigger:** Code review (composition skill) found thread safety issues:
+1. Race condition: `valueSize = estimateSize(value)` calculated outside synchronized block in `put()`
+2. TrieMap/Queue mismatch: `cache.get(key)` in `get()` reads outside synchronized, then updates accessOrder inside - creates ABA problem where cache and queue become inconsistent
+
+**What changed:**
+
+- `src/main/scala/javadocsmcp/infrastructure/LRUCache.scala`:
+  - Replaced `TrieMap` with standard `mutable.Map`
+  - Moved entire `get()` method body inside `synchronized` block
+  - Moved `valueSize` calculation inside `synchronized` block in `put()`
+
+**Before → After:**
+
+```scala
+// Before: Race condition - TrieMap read outside synchronized
+def get(key: K): Option[V] =
+  cache.get(key) match          // Outside synchronized!
+    case Some(value) =>
+      synchronized { ... }
+
+// After: Everything synchronized
+def get(key: K): Option[V] = synchronized {
+  cache.get(key) match
+    case Some(value) => ...
+}
+```
+
+**Patterns applied:**
+
+- **Consistent Synchronization:** All state access wrapped in synchronized blocks
+- **Simplification over Complexity:** Removed mixed lock-free + synchronized approach
+
+**Testing:**
+
+- All 30 cache-related tests pass without modification
+- Thread-safety tests (3 concurrent operation tests) continue to pass
+- Performance tests confirm < 100ms cache hit target still met
+
+**Code review:**
+
+- Iterations: 1
+- Review file: review-refactor-07-R1-20260102.md
+- Result: PASSED - 0 critical issues
+- Warnings: 2 (both out of scope - synchronized decomposition, service duplication)
+
+**Files changed:**
+
+```
+M  src/main/scala/javadocsmcp/infrastructure/LRUCache.scala
+```
+
+---
