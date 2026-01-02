@@ -163,7 +163,7 @@ class CachePerformanceTest extends munit.FunSuite:
     )
 
     // First error request
-    val (response1, duration1) = makeRequest("tools/call", params)
+    val (response1, _) = makeRequest("tools/call", params)
     val error1 = response1.hcursor.downField("result").downField("isError").as[Boolean]
 
     assert(error1.contains(true), "Should return error for non-existent artifact")

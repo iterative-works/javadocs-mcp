@@ -7,7 +7,7 @@ import chimp.*
 import javadocsmcp.domain.{Documentation, SourceCode, DocumentationError}
 import io.circe.Codec
 import sttp.tapir.Schema
-import scala.language.reflectiveCalls
+import scala.reflect.Selectable.reflectiveSelectable
 
 case class GetDocInput(
   coordinates: String,
