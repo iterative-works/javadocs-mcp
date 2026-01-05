@@ -26,7 +26,7 @@ object McpServer {
   ): ServerHandle = {
     val getDocTool = ToolDefinitions.getDocumentationTool(documentationService)
     val getSourceTool = ToolDefinitions.getSourceTool(sourceCodeService)
-    val endpoint = mcpEndpoint(List(getDocTool, getSourceTool), List("mcp"))
+    val endpoint = mcpEndpoint(List(getDocTool, getSourceTool), List("mcp"), showJsonSchemaMetadata = false)
 
     val thread = new Thread(() => {
       try {
@@ -58,7 +58,7 @@ object McpServer {
   ): Unit = {
     val getDocTool = ToolDefinitions.getDocumentationTool(documentationService)
     val getSourceTool = ToolDefinitions.getSourceTool(sourceCodeService)
-    val endpoint = mcpEndpoint(List(getDocTool, getSourceTool), List("mcp"))
+    val endpoint = mcpEndpoint(List(getDocTool, getSourceTool), List("mcp"), showJsonSchemaMetadata = false)
 
     println(s"Starting MCP server on port $port")
     NettySyncServer()

@@ -6,8 +6,13 @@ package javadocsmcp.presentation
 import chimp.*
 import javadocsmcp.domain.{Documentation, SourceCode, DocumentationError}
 import io.circe.Codec
-import sttp.tapir.Schema
+import sttp.tapir.{Schema, SchemaType}
 import scala.reflect.Selectable.reflectiveSelectable
+
+// Custom schema for Option[String] that produces Claude-compatible JSON Schema.
+// Default Tapir generates "type": ["string", "null"] which Claude's API rejects.
+// This produces "type": "string" with isOptional=true (field not in "required").
+given Schema[Option[String]] = Schema(SchemaType.SString(), isOptional = true)
 
 case class GetDocInput(
   coordinates: String,
