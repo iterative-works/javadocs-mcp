@@ -65,10 +65,24 @@ Infrastructure Layer (infrastructure/)
 ## Dependencies
 
 - **Chimp** (0.1.6): MCP server library
-- **Tapir Netty** (1.11.11): HTTP server
-- **Coursier** (2.1.10): Maven artifact resolution
+- **Tapir Netty** (1.13.4): HTTP server
+- **Coursier** (2.1.24): Maven artifact resolution
 - **TASTy Query** (1.6.1): Scala TASTy analysis for source lookup
 - **MUnit** (1.0.0): Testing framework
+
+## Claude API Schema Compatibility
+
+The Claude API has strict requirements for MCP tool JSON schemas. Two issues required workarounds:
+
+1. **No `$schema` field**: Claude rejects schemas with the `$schema` meta field, even with correct draft version. Fixed by passing `showJsonSchemaMetadata = false` to `mcpEndpoint()`.
+
+2. **No nullable type arrays**: Tapir generates `"type": ["string", "null"]` for `Option[String]`, but Claude rejects this. Fixed with a custom schema:
+   ```scala
+   given Schema[Option[String]] = Schema(SchemaType.SString(), isOptional = true)
+   ```
+   This produces `"type": "string"` with the field not in `required`.
+
+When adding new optional fields to tool inputs, use this pattern to ensure Claude compatibility.
 
 ## Compiler Flags
 
