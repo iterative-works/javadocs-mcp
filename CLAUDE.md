@@ -87,3 +87,30 @@ When adding new optional fields to tool inputs, use this pattern to ensure Claud
 ## Compiler Flags
 
 The project uses strict compiler settings (`-Werror`, `-Wunused:all`). All warnings must be fixed.
+
+## Network/Proxy Configuration (Claude Code Sandbox)
+
+When running in proxy environments (like the Claude Code sandbox), native image binaries (scala-cli, coursier) may not properly read HTTP_PROXY environment variables. Additionally, TLS inspection proxies require trusted CA certificates.
+
+**Solution: Use JVM scala-cli with local proxy**
+
+1. Download the JVM version of scala-cli (not native image):
+   ```bash
+   curl -x http://127.0.0.1:13130 -L -o /tmp/scala-cli-jvm \
+     https://github.com/VirtusLab/scala-cli/releases/download/v1.11.0/scala-cli.jar
+   ```
+
+2. Run a local proxy that handles upstream authentication (if needed):
+   ```python
+   # /tmp/simple_proxy.py - forwards to authenticated upstream proxy
+   python3 /tmp/simple_proxy.py &  # Listens on port 13130
+   ```
+
+3. Run scala-cli with proxy settings:
+   ```bash
+   java -Dhttp.proxyHost=127.0.0.1 -Dhttp.proxyPort=13130 \
+        -Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=13130 \
+        -jar /tmp/scala-cli-jvm compile --server=false --jvm system .
+   ```
+
+The JVM version respects Java proxy system properties and uses the system's Java truststore (which includes the TLS inspection CA in the sandbox).
